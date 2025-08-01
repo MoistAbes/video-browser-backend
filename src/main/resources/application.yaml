@@ -1,0 +1,4 @@
+app:
+  paths:
+    video-folder: E:/VIDEO
+    subtitle-folder: subtitles
