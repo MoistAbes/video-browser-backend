@@ -5,6 +5,7 @@ import dev.zymion.video.browser.app.entities.VideoInfoEntity;
 import dev.zymion.video.browser.app.entities.VideoTechnicalDetailsEntity;
 import dev.zymion.video.browser.app.enums.VideoTypeEnum;
 import dev.zymion.video.browser.app.models.VideoInfo;
+import dev.zymion.video.browser.app.repositories.ShowRepository;
 import dev.zymion.video.browser.app.repositories.VideoInfoRepository;
 import dev.zymion.video.browser.app.services.helper.AppPathProperties;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
@@ -21,10 +22,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -41,12 +45,16 @@ public class VideoService {
     private final Path videoFolder = Paths.get("E:/VIDEO");
     private final AppPathProperties appPathProperties;
     private final VideoScannerService videoScannerService;
+    private final ShowService showService;
+    private final ShowRepository showRepository;
 
     @Autowired
-    public VideoService(VideoInfoRepository videoInfoRepository, AppPathProperties appPathProperties, VideoScannerService videoScannerService) {
+    public VideoService(VideoInfoRepository videoInfoRepository, AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.videoInfoRepository = videoInfoRepository;
+        this.showService = showService;
+        this.showRepository = showRepository;
     }
 
     //ToDO
@@ -61,6 +69,9 @@ public class VideoService {
     //ffmpeg -i "Demon slayer - Infinity train.mp4" -t 00:30:00 -vf "fps=1/600" -qscale:v 2 thumbnails/thumb_%03d.jpg
 
     public void scanAllVideos() {
+        //kasujemy poprzednie
+        showRepository.deleteAll();
+
         List<Path> files = videoScannerService.findAllVideoFiles(videoFolder);
 
         // 1️⃣ Zbieramy wszystkie aktualne relativePath-y
@@ -78,6 +89,10 @@ public class VideoService {
 
         // 3️⃣ Usuwamy z bazy te, których już nie ma na dysku
         removeMissingFiles(currentRelativePaths);
+
+        showService.setUpShows(videoInfoRepository.findAll());
+
+
     }
 
 
@@ -295,32 +310,56 @@ public class VideoService {
 
         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
         response.setContentType(contentType != null ? contentType : "application/octet-stream");
-
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("Content-Length", String.valueOf(contentLength));
         response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
 
-        try (InputStream inputStream = Files.newInputStream(filePath);
+
+        try (SeekableByteChannel channel = Files.newByteChannel(filePath, StandardOpenOption.READ);
              ServletOutputStream outputStream = response.getOutputStream()) {
 
-            long skippedTotal = 0;
-            while (skippedTotal < start) {
-                long skipped = inputStream.skip(start - skippedTotal);
-                if (skipped <= 0) {
-                    throw new IOException("Nie udało się pominąć bajtów w InputStream");
-                }
-                skippedTotal += skipped;
-            }
+            channel.position(start);
 
-            byte[] buffer = new byte[8192];
+            int bufferSize = 1024 * 1024; // 1MB dla lepszej wydajności przy 4K
+            ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+
             long bytesToRead = contentLength;
-            int bytesRead;
 
-            while (bytesToRead > 0 && (bytesRead = inputStream.read(buffer, 0, (int)Math.min(buffer.length, bytesToRead))) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-                bytesToRead -= bytesRead;
+            while (bytesToRead > 0) {
+                buffer.clear();
+                int bytesRead = channel.read(buffer);
+                if (bytesRead == -1) break;
+
+                buffer.flip();
+                int toWrite = (int) Math.min(bytesRead, bytesToRead);
+
+                outputStream.write(buffer.array(), 0, toWrite);
+                bytesToRead -= toWrite;
             }
         }
+
+
+//        try (InputStream inputStream = Files.newInputStream(filePath);
+//             ServletOutputStream outputStream = response.getOutputStream()) {
+//
+//            long skippedTotal = 0;
+//            while (skippedTotal < start) {
+//                long skipped = inputStream.skip(start - skippedTotal);
+//                if (skipped <= 0) {
+//                    throw new IOException("Nie udało się pominąć bajtów w InputStream");
+//                }
+//                skippedTotal += skipped;
+//            }
+//
+//            byte[] buffer = new byte[8192];
+//            long bytesToRead = contentLength;
+//            int bytesRead;
+//
+//            while (bytesToRead > 0 && (bytesRead = inputStream.read(buffer, 0, (int)Math.min(buffer.length, bytesToRead))) != -1) {
+//                outputStream.write(buffer, 0, bytesRead);
+//                bytesToRead -= bytesRead;
+//            }
+//        }
 
     }
 

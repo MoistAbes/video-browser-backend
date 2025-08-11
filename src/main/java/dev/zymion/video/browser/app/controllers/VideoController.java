@@ -1,7 +1,7 @@
 package dev.zymion.video.browser.app.controllers;
 
-import dev.zymion.video.browser.app.models.VideoInfo;
 import dev.zymion.video.browser.app.services.VideoService;
+import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200")  // dopasuj do swojego frontu
@@ -50,13 +46,33 @@ public class VideoController {
 
     }
 
-    @GetMapping("/stream")
+    @GetMapping(value = "/stream", produces = "video/mp4")
     public void streamVideo(@RequestParam("path") String relativePath,
                             HttpServletRequest request,
-                            HttpServletResponse response) throws IOException {
+                            HttpServletResponse response) {
         log.info("streamVideo2: " + relativePath);
 
-        videoService.getVideoStream(relativePath, request, response);
+        AsyncContext asyncContext = request.startAsync();
+        asyncContext.setTimeout(0); // brak limitu czasu
+
+        asyncContext.start(() -> {
+            try {
+                videoService.getVideoStream(relativePath, request, response);
+            } catch (IOException e) {
+                // ignorujemy przerwane połączenie (przewijanie, zamknięcie okna)
+                if (e.getMessage() == null || !e.getMessage().contains("Connection reset")) {
+                    log.error("Błąd podczas streamowania wideo", e);
+                }
+            } catch (Exception e) {
+                log.error("Nieoczekiwany błąd podczas streamowania", e);
+            } finally {
+                try {
+                    asyncContext.complete();
+                } catch (IllegalStateException ignored) {
+                    // już zakończone
+                }
+            }
+        });
     }
 
     @GetMapping("/subtitles/{subtitleTitle}")

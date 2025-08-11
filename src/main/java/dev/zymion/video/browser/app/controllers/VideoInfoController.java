@@ -37,9 +37,6 @@ public class VideoInfoController {
 
         List<VideoInfoEntity> result = videoInfoService.findAll();
 
-        System.out.println(result);
-
-
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -62,7 +59,6 @@ public class VideoInfoController {
         //ToDO to bedzie trzeba jakos inaczej zalatwic ale poki co niech tak bedzie
         //dziwne to jest
         for (VideoInfoEntity videoInfoEntity : result) {
-            System.out.println(videoInfoEntity);
             videoInfoEntity.setTitle(videoInfoEntity.getVideoDetails().getParentTitle());
         }
 
