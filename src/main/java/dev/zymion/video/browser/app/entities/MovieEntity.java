@@ -27,7 +27,7 @@ public class MovieEntity {
 
     @JsonManagedReference
     @OneToOne
-    @JoinColumn(name = "video_info_id")
+    @JoinColumn(name = "video_info_id", nullable = false)
     private VideoInfoEntity videoInfo;
 
 
