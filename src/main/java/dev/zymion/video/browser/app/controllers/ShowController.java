@@ -1,6 +1,7 @@
 package dev.zymion.video.browser.app.controllers;
 
 import dev.zymion.video.browser.app.entities.ShowEntity;
+import dev.zymion.video.browser.app.projections.ShowRootPathProjection;
 import dev.zymion.video.browser.app.services.ShowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,24 +31,25 @@ public class ShowController {
 
         List<ShowEntity> result = showService.findAll();
 
-        System.out.println("shows found: " + result.size());
-        for (ShowEntity showEntity : result) {
-            log.info(showEntity.toString());
-        }
-
-
         return ResponseEntity.ok(result);
 
     }
 
     @GetMapping("find/{parentTitle}")
     public ResponseEntity<ShowEntity> findShowByParentTitle(@PathVariable String parentTitle) {
-        log.info("show/find/" + parentTitle);
+        log.info("show/find/{}", parentTitle);
 
         ShowEntity result = showService.findByParentTitle(parentTitle);
 
+        System.out.println("result: " + result);
 
         return ResponseEntity.ok(result);
+    }
+
+
+    @GetMapping("find/with-root-path")
+    public List<ShowRootPathProjection> getShowsWithRootPath() {
+        return showService.findAllShowsWithRootPath();
     }
 
 }

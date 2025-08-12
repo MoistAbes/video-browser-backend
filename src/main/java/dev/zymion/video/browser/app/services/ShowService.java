@@ -1,8 +1,10 @@
 package dev.zymion.video.browser.app.services;
 
 import dev.zymion.video.browser.app.entities.*;
+import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.enums.VideoTypeEnum;
 import dev.zymion.video.browser.app.exceptions.ShowMappingException;
+import dev.zymion.video.browser.app.projections.ShowRootPathProjection;
 import dev.zymion.video.browser.app.repositories.ShowRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,26 +21,26 @@ public class ShowService {
         this.showRepository = showRepository;
     }
 
+    public List<ShowRootPathProjection> findAllShowsWithRootPath() {
+        return showRepository.findAllShowsWithRootPath();
+    }
 
-    public void setUpShows(List<VideoInfoEntity> videoInfoEntityList) {
 
-
-
+    public void setUpShows2(List<MediaItemEntity> mediaItemEntities) {
         // Grupowanie po parentTitle
-        Map<String, List<VideoInfoEntity>> videoInfoEntityMap = new HashMap<>();
-
-        for (VideoInfoEntity videoInfoEntity : videoInfoEntityList) {
-            String parentTitle = videoInfoEntity.getVideoDetails().getParentTitle();
-            videoInfoEntityMap
+        Map<String, List<MediaItemEntity>> mediaItemEntityMap = new HashMap<>();
+        for (MediaItemEntity mediaItemEntity : mediaItemEntities) {
+            String parentTitle = mediaItemEntity.getParentTitle();
+            mediaItemEntityMap
                     .computeIfAbsent(parentTitle, k -> new ArrayList<>())
-                    .add(videoInfoEntity);
+                    .add(mediaItemEntity);
         }
 
         List<ShowEntity> showEntityList = new ArrayList<>();
 
-        for (Map.Entry<String, List<VideoInfoEntity>> entry : videoInfoEntityMap.entrySet()) {
+        for (Map.Entry<String, List<MediaItemEntity>> entry : mediaItemEntityMap.entrySet()) {
             String showName = entry.getKey();
-            List<VideoInfoEntity> videos = entry.getValue();
+            List<MediaItemEntity> videos = entry.getValue();
 
 //            System.out.printf("%s: %s\n", showName, videos.size());
 
@@ -49,28 +51,25 @@ public class ShowService {
 
             Map<Integer, SeasonEntity> seasonsEntityMap = new HashMap<>();
 
-            for (VideoInfoEntity videoInfoEntity : videos) {
+            for (MediaItemEntity mediaItemEntity : videos) {
 
-                if (isSeason(videoInfoEntity)) {
+                showEntity.setRootPath(mediaItemEntity.getRootPath());
+
+                if (mediaItemEntity.getType() == MediaTypeEnum.EPISODE) {
                     try {
 
-                        int seasonNumber = videoInfoEntity.getVideoDetails().getSeason();
+                        int seasonNumber = mediaItemEntity.getSeasonNumber().get();
 
                         // Pobierz sezon lub stwórz nowy
-                        SeasonEntity seasonEntity = seasonsEntityMap.computeIfAbsent(seasonNumber, s -> {
-                            SeasonEntity season = SeasonEntity.builder()
-                                    .show(showEntity)
-                                    .number(seasonNumber)
-                                    .episodes(new HashSet<>())
-                                    .build();
-                            return season;
-                        });
+                        SeasonEntity seasonEntity = seasonsEntityMap.computeIfAbsent(seasonNumber, s -> SeasonEntity.builder()
+                                .show(showEntity)
+                                .episodes(new HashSet<>())
+                                .build());
 
                         // Utwórz odcinek i przypisz do sezonu
                         EpisodeEntity episodeEntity = EpisodeEntity.builder()
                                 .season(seasonEntity)
-                                .number(videoInfoEntity.getVideoDetails().getEpisode())
-                                .videoInfo(videoInfoEntity)
+                                .mediaItem(mediaItemEntity)
                                 .build();
 
                         seasonEntity.getEpisodes().add(episodeEntity);
@@ -78,7 +77,7 @@ public class ShowService {
 
                     }catch (Exception e){
                         throw new ShowMappingException(
-                                "Error while mapping video: " + videoInfoEntity.getTitle(), e
+                                "Error while mapping video: " + mediaItemEntity.getTitle(), e
                         );
                     }
 
@@ -86,7 +85,7 @@ public class ShowService {
 
                     MovieEntity movieEntity = MovieEntity.builder()
                             .show(showEntity)
-                            .videoInfo(videoInfoEntity)
+                            .mediaItem(mediaItemEntity)
                             .build();
 
                     showEntity.getMovies().add(movieEntity);
@@ -101,16 +100,8 @@ public class ShowService {
         }
 
         // Tutaj możesz zapisać wszystkie show do bazy
-         showRepository.saveAll(showEntityList);
+        showRepository.saveAll(showEntityList);
     }
-
-
-    private boolean isSeason(VideoInfoEntity videoInfoEntity) {
-        return (videoInfoEntity.getType().equals(VideoTypeEnum.SHOW) ||
-                videoInfoEntity.getType().equals(VideoTypeEnum.ANIME))
-                && videoInfoEntity.getVideoDetails().getSeason() != null;
-    }
-
 
     public List<ShowEntity> findAll() {
 

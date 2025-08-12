@@ -1,10 +1,6 @@
-package dev.zymion.video.browser.app.services;
+package dev.zymion.video.browser.app.services.util;
 
-import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import org.springframework.stereotype.Service;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Service
 public class VideoConverterService {

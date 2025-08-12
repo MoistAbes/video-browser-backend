@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.services;
+package dev.zymion.video.browser.app.services.util;
 
 import org.springframework.stereotype.Service;
 

@@ -1,0 +1,17 @@
+package dev.zymion.video.browser.app.repositories;
+
+import dev.zymion.video.browser.app.entities.MediaItemEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface MediaItemRepository extends JpaRepository<MediaItemEntity, Long> {
+
+    @Query("SELECT m FROM MediaItemEntity m WHERE m.videoHash = :videoHash")
+    Optional<MediaItemEntity> findByVideoHash(@Param("videoHash") String videoHash);
+
+}

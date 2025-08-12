@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Getter
 @Setter
@@ -20,21 +19,18 @@ public class MovieEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "show_id", nullable = false)
     private ShowEntity show;
 
-    @JsonManagedReference
     @OneToOne
-    @JoinColumn(name = "video_info_id")
-    private VideoInfoEntity videoInfo;
-
+    @JoinColumn(name = "media_item_id", nullable = false)
+    private MediaItemEntity mediaItem;
 
     @Override
     public String toString() {
         return "MovieEntity{" +
-                "videoInfo=" + videoInfo.getTitle() +
+                "videoInfo=" + mediaItem.getTitle() +
                 '}';
     }
 }

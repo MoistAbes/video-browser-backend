@@ -4,16 +4,17 @@ public enum VideoTypeEnum {
 
     ANIME,
     MOVIE,
-    SHOW;
+    SHOW,
+    UNKNOWN;
 
     public static VideoTypeEnum fromString(String value) {
-        if (value == null) return null;
+        if (value == null) return UNKNOWN;
 
         return switch (value.trim().toLowerCase()) {
             case "anime" -> ANIME;
             case "movie" -> MOVIE;
             case "show", "shows" -> SHOW; // obsługuje oba warianty
-            default -> throw new IllegalArgumentException("Unknown VideoTypeEnum: " + value);
+            default -> UNKNOWN;
         };
     }
 

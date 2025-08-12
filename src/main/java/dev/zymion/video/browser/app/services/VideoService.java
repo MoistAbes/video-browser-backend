@@ -1,14 +1,11 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.entities.VideoDetailsEntity;
-import dev.zymion.video.browser.app.entities.VideoInfoEntity;
-import dev.zymion.video.browser.app.entities.VideoTechnicalDetailsEntity;
-import dev.zymion.video.browser.app.enums.VideoTypeEnum;
-import dev.zymion.video.browser.app.models.VideoInfo;
+import dev.zymion.video.browser.app.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.enums.MediaTypeEnum;
+import dev.zymion.video.browser.app.repositories.MediaItemRepository;
 import dev.zymion.video.browser.app.repositories.ShowRepository;
-import dev.zymion.video.browser.app.repositories.VideoInfoRepository;
 import dev.zymion.video.browser.app.services.helper.AppPathProperties;
-import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
+import dev.zymion.video.browser.app.services.util.VideoScannerService;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,19 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -41,20 +33,20 @@ import java.util.stream.Stream;
 @Service
 public class VideoService {
 
-    private final VideoInfoRepository videoInfoRepository;
     private final Path videoFolder = Paths.get("E:/VIDEO");
     private final AppPathProperties appPathProperties;
     private final VideoScannerService videoScannerService;
     private final ShowService showService;
     private final ShowRepository showRepository;
+    private final MediaItemRepository mediaItemRepository;
 
     @Autowired
-    public VideoService(VideoInfoRepository videoInfoRepository, AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository, MediaItemRepository mediaItemRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
-        this.videoInfoRepository = videoInfoRepository;
         this.showService = showService;
         this.showRepository = showRepository;
+        this.mediaItemRepository = mediaItemRepository;
     }
 
     //ToDO
@@ -74,29 +66,39 @@ public class VideoService {
 
         List<Path> files = videoScannerService.findAllVideoFiles(videoFolder);
 
+
+
         // 1️⃣ Zbieramy wszystkie aktualne relativePath-y
         Set<String> currentRelativePaths = files.stream()
                 .map(path -> videoFolder.relativize(path).toString().replace("\\", "/"))
                 .collect(Collectors.toSet());
 
         // 2️⃣ Przetwarzamy nowe/zmienione pliki
-        List<VideoInfoEntity> entities = files.stream()
-                .map(this::buildEntityFromPath)
-                .filter(Objects::nonNull) // pomija pliki bez zmian
-                .collect(Collectors.toList());
+//        List<VideoInfoEntity> entities = files.stream()
+//                .map(this::buildEntityFromPath)
+//                .filter(Objects::nonNull) // pomija pliki bez zmian
+//                .collect(Collectors.toList());
+//
+//        videoInfoRepository.saveAll(entities);
 
-        videoInfoRepository.saveAll(entities);
+        List<MediaItemEntity> mediaItems = files.stream()
+                .map(this::buildEntityFromPath)
+                .filter(Objects::nonNull)
+                .toList();
+
+        mediaItemRepository.saveAll(mediaItems);
 
         // 3️⃣ Usuwamy z bazy te, których już nie ma na dysku
         removeMissingFiles(currentRelativePaths);
 
-        showService.setUpShows(videoInfoRepository.findAll());
+//        showService.setUpShows(videoInfoRepository.findAll());
+        showService.setUpShows2(mediaItemRepository.findAll());
 
 
     }
 
 
-    private VideoInfoEntity buildEntityFromPath(Path path) {
+    private MediaItemEntity buildEntityFromPath(Path path) {
         String fileName = path.getFileName().toString();
         String title = fileName.replaceFirst("\\.[^.]+$", "");
 
@@ -107,72 +109,48 @@ public class VideoService {
 
         String fileNameWithExtension = parts[parts.length - 1];
 
-        // Typ = pierwsza część ścieżki (np. ANIME/MOVIE)
-        String typeRaw = parts[0];
-        VideoTypeEnum type = VideoTypeEnum.fromString(typeRaw);
-
-        // Ikona
-        String iconName = findIconPath(path);
-
-        String parentTitle = null;
+        MediaTypeEnum mediaTypeEnum;
+        String parentTitle;
         Integer season = null;
         Integer episode = null;
 
+        mediaTypeEnum = MediaTypeEnum.MOVIE;
+        parentTitle = parts[1];
 
-        if (type.equals(VideoTypeEnum.MOVIE)) {
-            parentTitle = parts[1];
-        } else if (parts.length >= 3) {
-            // np. SHOWS/BreakingBad/Season1/S01E01.mp4
-            parentTitle = parts[1];
-
-            // Parsujemy sezon z folderu, np. Season1 → 1
-            Matcher seasonMatcher = Pattern.compile("Season\\s*(\\d+)", Pattern.CASE_INSENSITIVE).matcher(parts[2]);
-            if (seasonMatcher.find()) {
-                season = Integer.parseInt(seasonMatcher.group(1));
-            }
-
-
-            // Parsujemy odcinek z nazwy pliku, np. S01E03
-            Matcher epMatcher = Pattern.compile("S\\d{1,2}E(\\d{1,2})", Pattern.CASE_INSENSITIVE).matcher(title);
-            if (epMatcher.find()) {
-                episode = Integer.parseInt(epMatcher.group(1));
-            }
+        // Parsujemy sezon z folderu, np. Season1 → 1
+        Matcher seasonMatcher = Pattern.compile("Season\\s*(\\d+)", Pattern.CASE_INSENSITIVE).matcher(parts[2]);
+        // Parsujemy odcinek z nazwy pliku, np. S01E03
+        Matcher epMatcher = Pattern.compile("S\\d{1,2}E(\\d{1,2})", Pattern.CASE_INSENSITIVE).matcher(title);
+        if (seasonMatcher.find() && epMatcher.find()) {
+            season = Integer.parseInt(seasonMatcher.group(1));
+            episode = Integer.parseInt(epMatcher.group(1));
+            mediaTypeEnum = MediaTypeEnum.EPISODE;
         }
 
 //        System.out.println(title + " | " + relativePath + " | " + parentTitle + " | " + season + " | " + episode);
         String resultHash = computeMetadataHash(path);
-        Optional<VideoInfoEntity> optionalVideoInfo =
-                videoInfoRepository.findByRootPathAndVideoDetails_FileName(rootPath, fileNameWithExtension);
-//        System.out.println(path + " | resultHash: " + resultHash);
+
+        Optional<MediaItemEntity> optionalMediaItemEntity =
+                mediaItemRepository.findByVideoHash(resultHash);
 
         // String codec = FFprobeHelper.getVideoCodec(path.toAbsolutePath().toString());
         // String audio = FFprobeHelper.getAudioCodec(path.toAbsolutePath().toString());
 
-        if (optionalVideoInfo.isPresent()) {
-            VideoInfoEntity existing = optionalVideoInfo.get();
+        if (optionalMediaItemEntity.isPresent()) {
+            MediaItemEntity existing = optionalMediaItemEntity.get();
 
-            if (!existing.getVideoTechnicalDetails().getVideoHash().equals(resultHash)) {
+            if (!existing.getVideoHash().equals(resultHash)) {
                 log.info("File modified: " + rootPath + " " + title);
                 // zwróć zaktualizowany obiekt
-                return VideoInfoEntity.builder()
+                return MediaItemEntity.builder()
                         .id(existing.getId())
                         .title(title)
-                        .type(type)
                         .rootPath(rootPath)
-                        .iconFileName(iconName)
-                        .videoDetails(VideoDetailsEntity.builder()
-                                .id(existing.getVideoDetails().getId())
-                                .fileName(fileNameWithExtension)
-                                .parentTitle(parentTitle)
-                                .season(season)
-                                .episode(episode)
-                                .build())
-                        .videoTechnicalDetails(VideoTechnicalDetailsEntity.builder()
-                                .id(existing.getVideoTechnicalDetails().getId())
-                                .videoHash(resultHash)
-//                        .codec(codec)
-//                        .audio(audio)
-                                .build())
+                        .fileName(fileNameWithExtension)
+                        .parentTitle(parentTitle)
+                        .seasonNumber(season)
+                        .episodeNumber(episode)
+                        .videoHash(resultHash)
                         .build();
             } else {
                 log.info("No changes for: "  + rootPath + " " + title);
@@ -183,40 +161,51 @@ public class VideoService {
         }else {
             log.info("New video info: "  + rootPath + " "  + title);
 
-            return VideoInfoEntity.builder()
+            return MediaItemEntity.builder()
                     .title(title)
-                    .type(type)
-                    .rootPath(rootPath)
-                    .iconFileName(iconName)
-                    .videoDetails(VideoDetailsEntity.builder()
-                            .fileName(fileNameWithExtension)
-                            .parentTitle(parentTitle)
-                            .season(season)
-                            .episode(episode)
-                            .build())
-                    .videoTechnicalDetails(VideoTechnicalDetailsEntity.builder()
-                            .videoHash(resultHash)
-//                        .codec(codec)
-//                        .audio(audio)
-                            .build())
+                    .parentTitle(parentTitle) // było w VideoDetailsEntity
+                    .seasonNumber(season)     // było w VideoDetailsEntity
+                    .episodeNumber(episode)   // było w VideoDetailsEntity
+                    .type(mediaTypeEnum)               // MOVIE / EPISODE
+                    .rootPath(rootPath)       // było w VideoInfoEntity
+                    .fileName(fileNameWithExtension) // było w VideoDetailsEntity
+//                    .codec(codec)             // było w VideoTechnicalDetailsEntity
+//                    .audio(audio)             // było w VideoTechnicalDetailsEntity
+                    .videoHash(resultHash)    // było w VideoTechnicalDetailsEntity
+//                    .show(showEntity)
                     .build();
+
         }
     }
 
-
     private void removeMissingFiles(Set<String> currentRelativePaths) {
-        List<VideoInfoEntity> allInDb = videoInfoRepository.findAll();
+        List<MediaItemEntity> allInDb = mediaItemRepository.findAll();
 
-        List<VideoInfoEntity> toDelete = allInDb.stream()
+        List<MediaItemEntity> toDelete = allInDb.stream()
                 .filter(video -> {
-                    String dbRelativePath = video.getRootPath() + "/" + video.getVideoDetails().getFileName();
+                    String dbRelativePath = video.getRootPath() + "/" + video.getFileName();
                     return !currentRelativePaths.contains(dbRelativePath);
                 })
                 .toList();
 
-        videoInfoRepository.deleteAll(toDelete);
+        mediaItemRepository.deleteAll(toDelete);
         log.info("Removed " + toDelete.size() + " entries not found on disk");
     }
+
+
+//    private void removeMissingFiles(Set<String> currentRelativePaths) {
+//        List<VideoInfoEntity> allInDb = videoInfoRepository.findAll();
+//
+//        List<VideoInfoEntity> toDelete = allInDb.stream()
+//                .filter(video -> {
+//                    String dbRelativePath = video.getRootPath() + "/" + video.getVideoDetails().getFileName();
+//                    return !currentRelativePaths.contains(dbRelativePath);
+//                })
+//                .toList();
+//
+//        videoInfoRepository.deleteAll(toDelete);
+//        log.info("Removed " + toDelete.size() + " entries not found on disk");
+//    }
 
 
     private String computeMetadataHash(Path path) {
@@ -240,13 +229,13 @@ public class VideoService {
                         .filter(Files::isRegularFile)
                         .map(p -> p.getFileName().toString()) // tylko nazwa pliku z rozszerzeniem
                         .findFirst()
-                        .orElse("");
+                        .orElse(null);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        return "";
+        return null;
     }
 
 
@@ -270,97 +259,114 @@ public class VideoService {
         return thumbnails;
     }
 
-
     public void getVideoStream(String relativePath, HttpServletRequest request, HttpServletResponse response) throws IOException {
-
-
         Path filePath = videoFolder.resolve(relativePath).normalize();
 
-        if (!Files.exists(filePath) || !filePath.startsWith(videoFolder)) {
-            log.info("Plik nie istnieje lub ścieżka jest nieprawidłowa: " + filePath);
+        if (!filePath.startsWith(videoFolder) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         long fileLength = Files.size(filePath);
-        String contentType = Files.probeContentType(filePath);
-        String rangeHeader = request.getHeader("Range");
+        String contentType = Optional.ofNullable(Files.probeContentType(filePath)).orElse("video/mp4");
+        String range = request.getHeader("Range");
 
-        long start = 0;
-        long end = fileLength - 1;
+        // ETag / Last-Modified
+        long lastModified = Files.getLastModifiedTime(filePath, LinkOption.NOFOLLOW_LINKS).toMillis();
+        String etag = "\"" + fileLength + "-" + lastModified + "\"";
+        response.setHeader("ETag", etag);
+        response.setDateHeader("Last-Modified", lastModified);
 
-        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-            String[] ranges = rangeHeader.substring(6).split("-");
-            try {
-                start = Long.parseLong(ranges[0]);
-                if (ranges.length > 1 && !ranges[1].isEmpty()) {
-                    end = Long.parseLong(ranges[1]);
-                }
-            } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                return;
-            }
+        // Conditional GET
+        if (etag.equals(request.getHeader("If-None-Match")) ||
+                (request.getDateHeader("If-Modified-Since") >= 0 && lastModified / 1000 <= request.getDateHeader("If-Modified-Since") / 1000)) {
+            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            return;
         }
 
-        if (end >= fileLength) {
-            end = fileLength - 1;
+        long start = 0, end = fileLength - 1;
+        boolean isPartial = false;
+
+        if (range != null && range.startsWith("bytes=")) {
+            isPartial = true;
+            String spec = range.substring(6).trim(); // e.g. "0-","100-200","-500"
+            if (spec.contains(",")) {
+                // Simplest path: reject multi-range
+                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                response.setHeader("Content-Range", "bytes */" + fileLength);
+                return;
+            }
+            String[] parts = spec.split("-", 2);
+            try {
+                if (parts[0].isEmpty()) {
+                    // suffix range: last N bytes
+                    long suffix = Long.parseLong(parts[1]);
+                    if (suffix <= 0) throw new NumberFormatException();
+                    start = Math.max(fileLength - suffix, 0);
+                } else {
+                    start = Long.parseLong(parts[0]);
+                    if (parts.length > 1 && !parts[1].isEmpty()) {
+                        end = Long.parseLong(parts[1]);
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                response.setHeader("Content-Range", "bytes */" + fileLength);
+                return;
+            }
+
+            if (start > end || start >= fileLength) {
+                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                response.setHeader("Content-Range", "bytes */" + fileLength);
+                return;
+            }
+            end = Math.min(end, fileLength - 1);
         }
 
         long contentLength = end - start + 1;
 
-        response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
-        response.setContentType(contentType != null ? contentType : "application/octet-stream");
-        response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader("Content-Length", String.valueOf(contentLength));
-        response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
-
-
-        try (SeekableByteChannel channel = Files.newByteChannel(filePath, StandardOpenOption.READ);
-             ServletOutputStream outputStream = response.getOutputStream()) {
-
-            channel.position(start);
-
-            int bufferSize = 1024 * 1024; // 1MB dla lepszej wydajności przy 4K
-            ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-
-            long bytesToRead = contentLength;
-
-            while (bytesToRead > 0) {
-                buffer.clear();
-                int bytesRead = channel.read(buffer);
-                if (bytesRead == -1) break;
-
-                buffer.flip();
-                int toWrite = (int) Math.min(bytesRead, bytesToRead);
-
-                outputStream.write(buffer.array(), 0, toWrite);
-                bytesToRead -= toWrite;
-            }
+        // If-Range: if validator mismatches, ignore Range and send full content
+        String ifRange = request.getHeader("If-Range");
+        if (isPartial && ifRange != null && !ifRange.equals(etag)) {
+            isPartial = false;
+            start = 0; end = fileLength - 1;
+            contentLength = fileLength;
         }
 
+        response.setContentType(contentType);
+        response.setHeader("Accept-Ranges", "bytes");
+        response.setHeader("Content-Disposition", "inline; filename=\"" + filePath.getFileName().toString() + "\"");
 
-//        try (InputStream inputStream = Files.newInputStream(filePath);
-//             ServletOutputStream outputStream = response.getOutputStream()) {
-//
-//            long skippedTotal = 0;
-//            while (skippedTotal < start) {
-//                long skipped = inputStream.skip(start - skippedTotal);
-//                if (skipped <= 0) {
-//                    throw new IOException("Nie udało się pominąć bajtów w InputStream");
-//                }
-//                skippedTotal += skipped;
-//            }
-//
-//            byte[] buffer = new byte[8192];
-//            long bytesToRead = contentLength;
-//            int bytesRead;
-//
-//            while (bytesToRead > 0 && (bytesRead = inputStream.read(buffer, 0, (int)Math.min(buffer.length, bytesToRead))) != -1) {
-//                outputStream.write(buffer, 0, bytesRead);
-//                bytesToRead -= bytesRead;
-//            }
-//        }
+        if (isPartial) {
+            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+            response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+            response.setHeader("Content-Length", String.valueOf(contentLength));
+        } else {
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setHeader("Content-Length", String.valueOf(fileLength));
+        }
 
+        // HEAD short-circuit
+        if ("HEAD".equalsIgnoreCase(request.getMethod())) {
+            return;
+        }
+
+        try (FileChannel in = FileChannel.open(filePath, StandardOpenOption.READ);
+             ServletOutputStream out = response.getOutputStream()) {
+
+            in.position(start);
+            long remaining = contentLength;
+            // Efficient copy loop (works well across containers)
+            byte[] buf = new byte[1024 * 1024];
+            while (remaining > 0) {
+                int toRead = (int)Math.min(buf.length, remaining);
+                int read = in.read(ByteBuffer.wrap(buf, 0, toRead));
+                if (read == -1) break;
+                out.write(buf, 0, read);
+                remaining -= read;
+            }
+            out.flush();
+        }
     }
 
 
