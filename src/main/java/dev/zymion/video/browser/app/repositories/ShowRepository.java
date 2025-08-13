@@ -1,7 +1,7 @@
 package dev.zymion.video.browser.app.repositories;
 
-import dev.zymion.video.browser.app.entities.ShowEntity;
-import dev.zymion.video.browser.app.projections.ShowRootPathProjection;
+import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

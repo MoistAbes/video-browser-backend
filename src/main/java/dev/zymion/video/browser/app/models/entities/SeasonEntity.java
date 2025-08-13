@@ -1,16 +1,16 @@
-package dev.zymion.video.browser.app.entities;
+package dev.zymion.video.browser.app.models.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Entity
 @Table(name = "seasons")
 public class SeasonEntity {
 
@@ -23,7 +23,7 @@ public class SeasonEntity {
     private ShowEntity show;
 
     @OneToMany(mappedBy = "season", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<EpisodeEntity> episodes = new HashSet<>();
+    private List<ContentEntity> episodes = new ArrayList<>();
 
     @Override
     public String toString() {

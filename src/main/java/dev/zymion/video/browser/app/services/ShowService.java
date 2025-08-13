@@ -1,10 +1,14 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.entities.*;
+import dev.zymion.video.browser.app.models.dto.ShowDto;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
-import dev.zymion.video.browser.app.enums.VideoTypeEnum;
 import dev.zymion.video.browser.app.exceptions.ShowMappingException;
-import dev.zymion.video.browser.app.projections.ShowRootPathProjection;
+import dev.zymion.video.browser.app.mappers.ShowMapper;
+import dev.zymion.video.browser.app.models.entities.ContentEntity;
+import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.models.entities.SeasonEntity;
+import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
 import dev.zymion.video.browser.app.repositories.ShowRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +19,12 @@ import java.util.*;
 public class ShowService {
 
     private final ShowRepository showRepository;
+    private final ShowMapper showMapper;
 
     @Autowired
-    public ShowService(ShowRepository showRepository) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper) {
         this.showRepository = showRepository;
+        this.showMapper = showMapper;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
@@ -26,7 +32,7 @@ public class ShowService {
     }
 
 
-    public void setUpShows2(List<MediaItemEntity> mediaItemEntities) {
+    public void setUpShows(List<MediaItemEntity> mediaItemEntities) {
         // Grupowanie po parentTitle
         Map<String, List<MediaItemEntity>> mediaItemEntityMap = new HashMap<>();
         for (MediaItemEntity mediaItemEntity : mediaItemEntities) {
@@ -63,16 +69,17 @@ public class ShowService {
                         // Pobierz sezon lub stwórz nowy
                         SeasonEntity seasonEntity = seasonsEntityMap.computeIfAbsent(seasonNumber, s -> SeasonEntity.builder()
                                 .show(showEntity)
-                                .episodes(new HashSet<>())
+                                .episodes(new ArrayList<>())
                                 .build());
 
-                        // Utwórz odcinek i przypisz do sezonu
-                        EpisodeEntity episodeEntity = EpisodeEntity.builder()
-                                .season(seasonEntity)
+                        ContentEntity contentEntity = ContentEntity.builder()
+                                .type(MediaTypeEnum.EPISODE)
                                 .mediaItem(mediaItemEntity)
+                                .season(seasonEntity)
                                 .build();
 
-                        seasonEntity.getEpisodes().add(episodeEntity);
+                        // Utwórz odcinek i przypisz do sezonu
+                        seasonEntity.getEpisodes().add(contentEntity);
 
 
                     }catch (Exception e){
@@ -83,18 +90,20 @@ public class ShowService {
 
                 }else {
 
-                    MovieEntity movieEntity = MovieEntity.builder()
+                    ContentEntity contentEntity = ContentEntity.builder()
                             .show(showEntity)
                             .mediaItem(mediaItemEntity)
+                            .type(MediaTypeEnum.MOVIE)
                             .build();
 
-                    showEntity.getMovies().add(movieEntity);
+
+                    showEntity.getMovies().add(contentEntity);
 
                 }
             }
 
             // Dodaj sezony do show
-            showEntity.setSeasons(new HashSet<>(seasonsEntityMap.values()));
+            showEntity.setSeasons(new ArrayList<>(seasonsEntityMap.values()));
 
             showEntityList.add(showEntity);
         }
@@ -103,14 +112,17 @@ public class ShowService {
         showRepository.saveAll(showEntityList);
     }
 
-    public List<ShowEntity> findAll() {
-
-        return showRepository.findAll();
+    public List<ShowDto> findAll() {
+        return showMapper.mapToDtoList(showRepository.findAll());
     }
 
-    public ShowEntity findByParentTitle(String parentTitle) {
+    public ShowDto findByParentTitle(String parentTitle) {
 
-        return showRepository.findByParentTitleWithSortedSeasons(parentTitle);
 
+//        ShowEntity showEntity = showRepository.findByParentTitleWithSortedSeasons(parentTitle);
+
+        //ToDO tutaj by sie przydalo posortowac
+
+        return showMapper.mapToDto(showRepository.findByParentTitleWithSortedSeasons(parentTitle));
     }
 }

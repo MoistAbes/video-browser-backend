@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.projections;
+package dev.zymion.video.browser.app.models.projections;
 
 public interface ShowRootPathProjection {
     Long getId();

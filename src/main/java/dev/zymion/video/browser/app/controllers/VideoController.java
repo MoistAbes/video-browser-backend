@@ -33,8 +33,7 @@ public class VideoController {
 
     @GetMapping("/scan")
     public ResponseEntity<Void> scanAllVideos() {
-        log.info("Scanning all videos");
-
+        log.info("videos/scan Scanning all videos");
 
         try {
             videoService.scanAllVideos();
@@ -92,7 +91,7 @@ public class VideoController {
     //    ToDO niby tutaj icon jest ale tym moge pobrac jakikolwiek img jest zarzuce dobra sciezke
     @GetMapping("/icon")
     public ResponseEntity<Resource> getVideoIcon(@RequestParam("path") String relativePath) {
-        log.info("getVideoIcon: " + relativePath);
+        log.info("videos/icon/{}: ", relativePath);
 
         try {
             Resource icon = videoService.getVideoIcon(relativePath);

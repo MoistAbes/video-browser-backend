@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.repositories.MediaItemRepository;
 import dev.zymion.video.browser.app.repositories.ShowRepository;
@@ -66,20 +66,12 @@ public class VideoService {
 
         List<Path> files = videoScannerService.findAllVideoFiles(videoFolder);
 
-
-
         // 1️⃣ Zbieramy wszystkie aktualne relativePath-y
         Set<String> currentRelativePaths = files.stream()
                 .map(path -> videoFolder.relativize(path).toString().replace("\\", "/"))
                 .collect(Collectors.toSet());
 
         // 2️⃣ Przetwarzamy nowe/zmienione pliki
-//        List<VideoInfoEntity> entities = files.stream()
-//                .map(this::buildEntityFromPath)
-//                .filter(Objects::nonNull) // pomija pliki bez zmian
-//                .collect(Collectors.toList());
-//
-//        videoInfoRepository.saveAll(entities);
 
         List<MediaItemEntity> mediaItems = files.stream()
                 .map(this::buildEntityFromPath)
@@ -91,10 +83,7 @@ public class VideoService {
         // 3️⃣ Usuwamy z bazy te, których już nie ma na dysku
         removeMissingFiles(currentRelativePaths);
 
-//        showService.setUpShows(videoInfoRepository.findAll());
-        showService.setUpShows2(mediaItemRepository.findAll());
-
-
+        showService.setUpShows(mediaItemRepository.findAll());
     }
 
 
@@ -192,22 +181,6 @@ public class VideoService {
         log.info("Removed " + toDelete.size() + " entries not found on disk");
     }
 
-
-//    private void removeMissingFiles(Set<String> currentRelativePaths) {
-//        List<VideoInfoEntity> allInDb = videoInfoRepository.findAll();
-//
-//        List<VideoInfoEntity> toDelete = allInDb.stream()
-//                .filter(video -> {
-//                    String dbRelativePath = video.getRootPath() + "/" + video.getVideoDetails().getFileName();
-//                    return !currentRelativePaths.contains(dbRelativePath);
-//                })
-//                .toList();
-//
-//        videoInfoRepository.deleteAll(toDelete);
-//        log.info("Removed " + toDelete.size() + " entries not found on disk");
-//    }
-
-
     private String computeMetadataHash(Path path) {
         try {
             long size = Files.size(path);
@@ -219,25 +192,6 @@ public class VideoService {
             throw new RuntimeException("Cannot compute metadata hash", e);
         }
     }
-
-
-    private String findIconPath(Path path) {
-        Path iconDir = path.getParent().resolve("icon");
-        if (Files.exists(iconDir) && Files.isDirectory(iconDir)) {
-            try (Stream<Path> iconFiles = Files.list(iconDir)) {
-                return iconFiles
-                        .filter(Files::isRegularFile)
-                        .map(p -> p.getFileName().toString()) // tylko nazwa pliku z rozszerzeniem
-                        .findFirst()
-                        .orElse(null);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return null;
-    }
-
 
     public List<String> getAllThumbnails(String rootFolderPath) {
         List<String> thumbnails = new ArrayList<>();
@@ -373,8 +327,6 @@ public class VideoService {
     public Resource getVideoIcon(String relativePath) throws FileNotFoundException, MalformedURLException {
         Path fullPath = videoFolder.resolve(relativePath).normalize();
 
-        System.out.println("full path = " + fullPath);
-
         // Zabezpieczenie przed wyjściem poza folder
         if (!fullPath.startsWith(videoFolder.toAbsolutePath())) {
             throw new SecurityException("Attempt to access outside of video folder");
@@ -413,8 +365,6 @@ public class VideoService {
                 .resolve(appPathProperties.getSubtitleFolder())            // /subtitles
                 .resolve(subtitleName + ".vtt")                            // /Fast and Furious 1.vtt
                 .normalize();                                              // Normalized full path
-
-        System.out.println("subtitlePath = " + subtitlePath);
 
         if (!Files.exists(subtitlePath)) {
             throw new FileNotFoundException("Subtitle not found: " + subtitlePath);

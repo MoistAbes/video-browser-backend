@@ -4,6 +4,15 @@ public enum MediaTypeEnum {
 
     MOVIE,
     EPISODE,
-    UNKNOWN
+    UNKNOWN;
+
+    @Override
+    public String toString() {
+        return switch (this) {
+            case MOVIE -> "Movie";
+            case EPISODE -> "Episode";
+            case UNKNOWN -> "Unknown";
+        };
+    }
 
 }

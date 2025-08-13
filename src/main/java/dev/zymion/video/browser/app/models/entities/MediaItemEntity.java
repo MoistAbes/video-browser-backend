@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.entities;
+package dev.zymion.video.browser.app.models.entities;
 
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import jakarta.persistence.*;

@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
 import dev.zymion.video.browser.app.repositories.MediaItemRepository;
 import org.springframework.stereotype.Service;
 

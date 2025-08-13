@@ -1,19 +1,17 @@
-package dev.zymion.video.browser.app.entities;
+package dev.zymion.video.browser.app.models.entities;
 
 
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Entity
 @Table(
         name = "shows",
         indexes = {
@@ -33,11 +31,10 @@ public class ShowEntity {
     private String rootPath;
 
     @OneToMany(fetch = FetchType.LAZY ,mappedBy = "show", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SeasonEntity> seasons = new HashSet<>();
+    private List<SeasonEntity> seasons = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "show", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MovieEntity> movies = new ArrayList<>();
-
+    private List<ContentEntity> movies = new ArrayList<>();
 
     @Override
     public String toString() {
