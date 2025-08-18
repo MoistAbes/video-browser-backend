@@ -1,0 +1,42 @@
+package dev.zymion.video.browser.app.config;
+
+import dev.zymion.video.browser.app.exceptions.RoleNotFoundException;
+import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
+import dev.zymion.video.browser.app.models.dto.ErrorResponseDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthException(AuthenticationException ex) {
+        ErrorResponseDto error = new ErrorResponseDto("Niepoprawne dane uwierzytelniające");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserNotFound(UsernameNotFoundException ex) {
+        ErrorResponseDto error = new ErrorResponseDto("Użytkownik nie istnieje");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleRoleNotFoundException(RoleNotFoundException ex) {
+        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+}
+
