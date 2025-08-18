@@ -21,16 +21,11 @@ public class ContentEntity {
     @Column(nullable = false)
     private MediaTypeEnum type; // MOVIE or EPISODE
 
-    @ManyToOne
-    @JoinColumn(name = "show_id", nullable = false)
-    private ShowEntity show;
-
-    @ManyToOne
-    @JoinColumn(name = "season_id") // nullable — tylko dla EPISODE
-    private SeasonEntity season;
-
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "media_item_id", nullable = false)
     private MediaItemEntity mediaItem;
+
+
+
 
 }

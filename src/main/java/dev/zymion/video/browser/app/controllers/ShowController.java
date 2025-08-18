@@ -35,6 +35,16 @@ public class ShowController {
 
     }
 
+    @GetMapping("find/random")
+    public ResponseEntity<List<ShowDto>> findRandomShows() {
+        log.info("show/find/random");
+
+        List<ShowDto> result = showService.findRandom();
+
+        return ResponseEntity.ok(result);
+
+    }
+
     @GetMapping("find/{parentTitle}")
     public ResponseEntity<ShowDto> findShowByParentTitle(@PathVariable String parentTitle) {
         log.info("show/find/{}", parentTitle);

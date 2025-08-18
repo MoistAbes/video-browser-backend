@@ -18,16 +18,17 @@ public class SeasonEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "show_id", nullable = false)
-    private ShowEntity show;
+    private int number;
 
-    @OneToMany(mappedBy = "season", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "season_id") // kolumna w ContentEntity
     private List<ContentEntity> episodes = new ArrayList<>();
 
     @Override
     public String toString() {
         return "SeasonEntity{" +
+                "id=" + id +
+//                "show id=" + show.getId() +
                 "episodes=" + episodes +
                 '}';
     }

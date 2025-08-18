@@ -1,10 +1,12 @@
 package dev.zymion.video.browser.app.mappers;
 
 import dev.zymion.video.browser.app.models.dto.ShowDto;
+import dev.zymion.video.browser.app.models.entities.GenreEntity;
 import dev.zymion.video.browser.app.models.entities.ShowEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ShowMapper {
@@ -25,7 +27,11 @@ public class ShowMapper {
               showEntity.getName(),
               showEntity.getRootPath(),
               seasonMapper.mapToDtoList(showEntity.getSeasons()),
-              contentMapper.mapToDtoList(showEntity.getMovies())
+              contentMapper.mapToDtoList(showEntity.getMovies()),
+              showEntity.getCategory() != null ? showEntity.getCategory().getName() : null,
+              showEntity.getGenres().stream()
+                      .map(GenreEntity::getName)
+                      .collect(Collectors.toSet())
         );
 
     }

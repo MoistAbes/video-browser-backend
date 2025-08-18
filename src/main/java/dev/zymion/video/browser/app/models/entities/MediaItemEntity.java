@@ -32,6 +32,7 @@ public class MediaItemEntity {
 
     private String codec;
     private String audio;
+    private double duration;
 
     @Column(nullable = false)
     private String videoHash;

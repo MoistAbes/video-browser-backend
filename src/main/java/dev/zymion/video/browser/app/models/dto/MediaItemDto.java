@@ -5,6 +5,10 @@ public record MediaItemDto (
         String title,
         Integer seasonNumber,
         Integer episodeNumber,
+        String audio,
+        String codec,
+        double duration,
         String type,
-        String fileName
+        String fileName,
+        String rootPath
 ) {}

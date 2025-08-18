@@ -12,14 +12,15 @@ import java.util.List;
 @Repository
 public interface ShowRepository extends JpaRepository<ShowEntity, Integer> {
 
-    @Query("SELECT DISTINCT s FROM ShowEntity s " +
-            "LEFT JOIN FETCH s.seasons season " +
-            "LEFT JOIN FETCH season.episodes e " +
-            "WHERE s.name = :parentTitle")
-    ShowEntity findByParentTitleWithSortedSeasons(@Param("parentTitle") String parentTitle);
+
+    @Query("SELECT s FROM ShowEntity s WHERE s.name = :parentTitle")
+    ShowEntity findByParentTitle(@Param("parentTitle") String parentTitle);
 
 
     @Query("SELECT s.id AS id, s.name AS name, s.rootPath AS rootPath FROM ShowEntity s")
     List<ShowRootPathProjection> findAllShowsWithRootPath();
+
+    @Query(value = "SELECT * FROM shows ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
+    List<ShowEntity> findRandomShows(@Param("limit") int limit);
 
 }

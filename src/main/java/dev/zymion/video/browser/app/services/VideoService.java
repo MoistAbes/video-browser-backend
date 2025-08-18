@@ -1,10 +1,13 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.models.entities.ContentEntity;
 import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
+import dev.zymion.video.browser.app.repositories.ContentRepository;
 import dev.zymion.video.browser.app.repositories.MediaItemRepository;
 import dev.zymion.video.browser.app.repositories.ShowRepository;
 import dev.zymion.video.browser.app.services.helper.AppPathProperties;
+import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import dev.zymion.video.browser.app.services.util.VideoScannerService;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,14 +42,16 @@ public class VideoService {
     private final ShowService showService;
     private final ShowRepository showRepository;
     private final MediaItemRepository mediaItemRepository;
+    private final ContentRepository contentRepository;
 
     @Autowired
-    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository, MediaItemRepository mediaItemRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository, MediaItemRepository mediaItemRepository, ContentRepository contentRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.showService = showService;
         this.showRepository = showRepository;
         this.mediaItemRepository = mediaItemRepository;
+        this.contentRepository = contentRepository;
     }
 
     //ToDO
@@ -62,7 +67,7 @@ public class VideoService {
 
     public void scanAllVideos() {
         //kasujemy poprzednie
-        showRepository.deleteAll();
+//        showRepository.deleteAll();
 
         List<Path> files = videoScannerService.findAllVideoFiles(videoFolder);
 
@@ -71,23 +76,30 @@ public class VideoService {
                 .map(path -> videoFolder.relativize(path).toString().replace("\\", "/"))
                 .collect(Collectors.toSet());
 
-        // 2️⃣ Przetwarzamy nowe/zmienione pliki
+        System.out.println("Current relative paths: ");
+        for (String path : currentRelativePaths) {
+            System.out.println(path);
+        }
 
+        // 2️⃣ Przetwarzamy nowe/zmienione pliki
         List<MediaItemEntity> mediaItems = files.stream()
                 .map(this::buildEntityFromPath)
                 .filter(Objects::nonNull)
                 .toList();
 
-        mediaItemRepository.saveAll(mediaItems);
+
+
+        //tutaj beda tylko te ktore sie zmienily lub nowe
+        List<MediaItemEntity> savedMediaItems = mediaItemRepository.saveAll(mediaItems);
 
         // 3️⃣ Usuwamy z bazy te, których już nie ma na dysku
         removeMissingFiles(currentRelativePaths);
 
-        showService.setUpShows(mediaItemRepository.findAll());
+        showService.setUpShows(savedMediaItems);
     }
 
 
-    private MediaItemEntity buildEntityFromPath(Path path) {
+    private MediaItemEntity buildEntityFromPath(Path path)   {
         String fileName = path.getFileName().toString();
         String title = fileName.replaceFirst("\\.[^.]+$", "");
 
@@ -122,8 +134,7 @@ public class VideoService {
         Optional<MediaItemEntity> optionalMediaItemEntity =
                 mediaItemRepository.findByVideoHash(resultHash);
 
-        // String codec = FFprobeHelper.getVideoCodec(path.toAbsolutePath().toString());
-        // String audio = FFprobeHelper.getAudioCodec(path.toAbsolutePath().toString());
+
 
         if (optionalMediaItemEntity.isPresent()) {
             MediaItemEntity existing = optionalMediaItemEntity.get();
@@ -139,16 +150,24 @@ public class VideoService {
                         .parentTitle(parentTitle)
                         .seasonNumber(season)
                         .episodeNumber(episode)
+                        .codec(existing.getCodec().orElse(null))             // było w VideoTechnicalDetailsEntity
+                        .audio(existing.getAudio().orElse(null))             // było w VideoTechnicalDetailsEntity
+                        .duration(existing.getDuration())
                         .videoHash(resultHash)
+                        .type(existing.getType())
                         .build();
             } else {
-                log.info("No changes for: "  + rootPath + " " + title);
+//                log.info("No changes for: "  + rootPath + " " + title);
                 return null; // lub pomiń zapis
             }
 
 
         }else {
-            log.info("New video info: "  + rootPath + " "  + title);
+            String codec = FFprobeHelper.getVideoCodec(path.toAbsolutePath().toString());
+            String audio = FFprobeHelper.getAudioCodec(path.toAbsolutePath().toString());
+            double duration = FFprobeHelper.getVideoDurationInSeconds(path.toAbsolutePath());
+            log.info("New video: "  + rootPath + " "  + title);
+            log.info("Path: " + path);
 
             return MediaItemEntity.builder()
                     .title(title)
@@ -158,10 +177,11 @@ public class VideoService {
                     .type(mediaTypeEnum)               // MOVIE / EPISODE
                     .rootPath(rootPath)       // było w VideoInfoEntity
                     .fileName(fileNameWithExtension) // było w VideoDetailsEntity
-//                    .codec(codec)             // było w VideoTechnicalDetailsEntity
-//                    .audio(audio)             // było w VideoTechnicalDetailsEntity
+                    .codec(codec)             // było w VideoTechnicalDetailsEntity
+                    .audio(audio)             // było w VideoTechnicalDetailsEntity
+                    .duration(duration)
                     .videoHash(resultHash)    // było w VideoTechnicalDetailsEntity
-//                    .show(showEntity)
+                    .type(mediaTypeEnum)
                     .build();
 
         }
@@ -177,8 +197,14 @@ public class VideoService {
                 })
                 .toList();
 
-        mediaItemRepository.deleteAll(toDelete);
-        log.info("Removed " + toDelete.size() + " entries not found on disk");
+        System.out.println("To delete: ");
+        for (MediaItemEntity deleted: toDelete) {
+            System.out.println(deleted.getFileName() + " id: " + deleted.getId());
+            Optional<ContentEntity> contentEntityToDelete = contentRepository.findByMediaItemId(deleted.getId());
+
+            contentEntityToDelete.ifPresent(contentRepository::delete);
+            log.info("Removed " + toDelete.size() + " entries not found on disk");
+        }
     }
 
     private String computeMetadataHash(Path path) {
@@ -212,117 +238,6 @@ public class VideoService {
 
         return thumbnails;
     }
-
-    public void getVideoStream(String relativePath, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Path filePath = videoFolder.resolve(relativePath).normalize();
-
-        if (!filePath.startsWith(videoFolder) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        long fileLength = Files.size(filePath);
-        String contentType = Optional.ofNullable(Files.probeContentType(filePath)).orElse("video/mp4");
-        String range = request.getHeader("Range");
-
-        // ETag / Last-Modified
-        long lastModified = Files.getLastModifiedTime(filePath, LinkOption.NOFOLLOW_LINKS).toMillis();
-        String etag = "\"" + fileLength + "-" + lastModified + "\"";
-        response.setHeader("ETag", etag);
-        response.setDateHeader("Last-Modified", lastModified);
-
-        // Conditional GET
-        if (etag.equals(request.getHeader("If-None-Match")) ||
-                (request.getDateHeader("If-Modified-Since") >= 0 && lastModified / 1000 <= request.getDateHeader("If-Modified-Since") / 1000)) {
-            response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            return;
-        }
-
-        long start = 0, end = fileLength - 1;
-        boolean isPartial = false;
-
-        if (range != null && range.startsWith("bytes=")) {
-            isPartial = true;
-            String spec = range.substring(6).trim(); // e.g. "0-","100-200","-500"
-            if (spec.contains(",")) {
-                // Simplest path: reject multi-range
-                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                response.setHeader("Content-Range", "bytes */" + fileLength);
-                return;
-            }
-            String[] parts = spec.split("-", 2);
-            try {
-                if (parts[0].isEmpty()) {
-                    // suffix range: last N bytes
-                    long suffix = Long.parseLong(parts[1]);
-                    if (suffix <= 0) throw new NumberFormatException();
-                    start = Math.max(fileLength - suffix, 0);
-                } else {
-                    start = Long.parseLong(parts[0]);
-                    if (parts.length > 1 && !parts[1].isEmpty()) {
-                        end = Long.parseLong(parts[1]);
-                    }
-                }
-            } catch (NumberFormatException ex) {
-                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                response.setHeader("Content-Range", "bytes */" + fileLength);
-                return;
-            }
-
-            if (start > end || start >= fileLength) {
-                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
-                response.setHeader("Content-Range", "bytes */" + fileLength);
-                return;
-            }
-            end = Math.min(end, fileLength - 1);
-        }
-
-        long contentLength = end - start + 1;
-
-        // If-Range: if validator mismatches, ignore Range and send full content
-        String ifRange = request.getHeader("If-Range");
-        if (isPartial && ifRange != null && !ifRange.equals(etag)) {
-            isPartial = false;
-            start = 0; end = fileLength - 1;
-            contentLength = fileLength;
-        }
-
-        response.setContentType(contentType);
-        response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader("Content-Disposition", "inline; filename=\"" + filePath.getFileName().toString() + "\"");
-
-        if (isPartial) {
-            response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
-            response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
-            response.setHeader("Content-Length", String.valueOf(contentLength));
-        } else {
-            response.setStatus(HttpServletResponse.SC_OK);
-            response.setHeader("Content-Length", String.valueOf(fileLength));
-        }
-
-        // HEAD short-circuit
-        if ("HEAD".equalsIgnoreCase(request.getMethod())) {
-            return;
-        }
-
-        try (FileChannel in = FileChannel.open(filePath, StandardOpenOption.READ);
-             ServletOutputStream out = response.getOutputStream()) {
-
-            in.position(start);
-            long remaining = contentLength;
-            // Efficient copy loop (works well across containers)
-            byte[] buf = new byte[1024 * 1024];
-            while (remaining > 0) {
-                int toRead = (int)Math.min(buf.length, remaining);
-                int read = in.read(ByteBuffer.wrap(buf, 0, toRead));
-                if (read == -1) break;
-                out.write(buf, 0, read);
-                remaining -= read;
-            }
-            out.flush();
-        }
-    }
-
 
     public Resource getVideoIcon(String relativePath) throws FileNotFoundException, MalformedURLException {
         Path fullPath = videoFolder.resolve(relativePath).normalize();

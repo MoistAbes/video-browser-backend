@@ -15,8 +15,12 @@ public class MediaItemMapper {
                 entity.getTitle(),
                 entity.getSeasonNumber().orElse(null),
                 entity.getEpisodeNumber().orElse(null),
+                entity.getAudio().orElse(null),
+                entity.getCodec().orElse(null),
+                entity.getDuration(),
                 entity.getType().toString(),
-                entity.getFileName()
+                entity.getFileName(),
+                entity.getRootPath()
         );
     }
 

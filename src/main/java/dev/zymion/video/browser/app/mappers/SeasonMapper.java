@@ -21,6 +21,7 @@ public class SeasonMapper {
 
         return new SeasonDto(
                 seasonEntity.getId(),
+                seasonEntity.getNumber(),
                 contentMapper.mapToDtoList(seasonEntity.getEpisodes())
         );
 

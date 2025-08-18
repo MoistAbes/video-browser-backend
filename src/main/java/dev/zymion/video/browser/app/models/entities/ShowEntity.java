@@ -4,7 +4,9 @@ package dev.zymion.video.browser.app.models.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -30,11 +32,25 @@ public class ShowEntity {
     @Column(nullable = false, unique = true)
     private String rootPath;
 
-    @OneToMany(fetch = FetchType.LAZY ,mappedBy = "show", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "show_id") // kolumna w SeasonEntity
     private List<SeasonEntity> seasons = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "show", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "show_id") // kolumna w ContentEntity
     private List<ContentEntity> movies = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "shows_genres", // nazwa tabeli pośredniczącej
+            joinColumns = @JoinColumn(name = "show_id"), // kolumna wskazująca kategorię
+            inverseJoinColumns = @JoinColumn(name = "genre_id") // kolumna wskazująca gatunek
+    )
+    private Set<GenreEntity> genres = new HashSet<>();
 
     @Override
     public String toString() {
