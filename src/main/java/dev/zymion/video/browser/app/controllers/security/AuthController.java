@@ -58,9 +58,9 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<JwtTokenDto> register(@RequestBody AuthRequestDto request) {
-        JwtTokenDto token = userInfoService.registerUser(request);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<Void> register(@RequestBody AuthRequestDto request) {
+        userInfoService.registerUser(request);
+        return ResponseEntity.ok().build();
     }
 
 }

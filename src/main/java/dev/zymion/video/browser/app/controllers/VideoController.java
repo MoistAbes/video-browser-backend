@@ -36,8 +36,6 @@ public class VideoController {
 
     @GetMapping("/scan")
     public ResponseEntity<Void> scanAllVideos() {
-        log.info("videos/scan Scanning all videos");
-
         try {
             videoService.scanAllVideos();
         }catch (Exception e) {
@@ -52,9 +50,6 @@ public class VideoController {
 
     @GetMapping("/subtitles/{subtitleTitle}")
     public ResponseEntity<Resource> getSubtitle(@RequestParam("path") String relativePath, @PathVariable("subtitleTitle") String subtitleTitle) throws IOException {
-        log.info("videos/subtitles/{}: ", subtitleTitle);
-
-
         Resource subtitles = videoService.getSubtitles(relativePath, subtitleTitle);
 
         return ResponseEntity.ok()
@@ -67,8 +62,6 @@ public class VideoController {
     //    ToDO niby tutaj icon jest ale tym moge pobrac jakikolwiek img jest zarzuce dobra sciezke
     @GetMapping("/icon")
     public ResponseEntity<Resource> getVideoIcon(@RequestParam("path") String relativePath) {
-        log.info("videos/icon/{}: ", relativePath);
-
         try {
             Resource icon = videoService.getVideoIcon(relativePath);
             // Zgadywanie MIME typu
@@ -96,7 +89,6 @@ public class VideoController {
 
     @GetMapping("/thumbnails")
     public ResponseEntity<List<String>> findAllVideoInfoThumbnails(@RequestParam String rootFolderPath) {
-        log.info("Find all video info thumbnails");
 
         List<String> result = videoService.getAllThumbnails(rootFolderPath);
         return ResponseEntity.ok(result);

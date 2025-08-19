@@ -25,12 +25,8 @@ public class CategoryController {
 
     @GetMapping("find/all")
     public ResponseEntity<List<CategoryEntity>> findAllCategories() {
-        log.info("category/find/all");
-
         List<CategoryEntity> result = categoryService.findAll();
-
         return ResponseEntity.ok(result);
-
     }
 
 }

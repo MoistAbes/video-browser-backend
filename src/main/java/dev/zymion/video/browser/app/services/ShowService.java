@@ -190,6 +190,14 @@ public class ShowService {
 
         showEntity.getSeasons().sort(Comparator.comparingInt(SeasonEntity::getNumber));
 
+        // sortujemy odcinki w każdym sezonie po numerze odcinka w MediaItemEntity
+        for (SeasonEntity seasonEntity : showEntity.getSeasons()) {
+            seasonEntity.getEpisodes().sort(Comparator.comparingInt(
+                    episode -> episode.getMediaItem().getEpisodeNumber().orElse(0) // jeśli null, traktujemy jako 0
+            ));
+        }
+
+
         return showMapper.mapToDto(showEntity);
     }
 

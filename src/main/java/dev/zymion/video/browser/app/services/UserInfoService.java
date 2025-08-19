@@ -45,15 +45,12 @@ public class UserInfoService {
     }
 
 
-    public JwtTokenDto registerUser(AuthRequestDto request) {
+    public void registerUser(AuthRequestDto request) {
         if (userInfoRepository.findByUsername(request.username()).isPresent()) {
             throw new UserAlreadyExistsException(request.username());
         }
 
-        UserInfoEntity user = createUser(request);
-        String token = jwtService.generateToken(user);
-
-        return new JwtTokenDto(token);
+        createUser(request);
     }
 
 }

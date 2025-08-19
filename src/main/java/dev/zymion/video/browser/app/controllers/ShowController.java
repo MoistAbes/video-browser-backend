@@ -27,32 +27,21 @@ public class ShowController {
 
     @GetMapping("find/all")
     public ResponseEntity<List<ShowDto>> findAllShows() {
-        log.info("show/find/all");
-
         List<ShowDto> result = showService.findAll();
-
         return ResponseEntity.ok(result);
 
     }
 
     @GetMapping("find/random")
     public ResponseEntity<List<ShowDto>> findRandomShows() {
-        log.info("show/find/random");
-
         List<ShowDto> result = showService.findRandom();
-
         return ResponseEntity.ok(result);
 
     }
 
     @GetMapping("find/{parentTitle}")
     public ResponseEntity<ShowDto> findShowByParentTitle(@PathVariable String parentTitle) {
-        log.info("show/find/{}", parentTitle);
-
         ShowDto result = showService.findByParentTitle(parentTitle);
-
-        System.out.println("result: " + result);
-
         return ResponseEntity.ok(result);
     }
 

@@ -47,8 +47,6 @@ public class StreamController {
     public void streamVideo(@RequestParam("path") String relativePath,
                             HttpServletRequest request,
                             HttpServletResponse response) throws IOException {
-        log.info("Normal streaming: {} | {} | {}", relativePath, request, response);
-
         AsyncContext asyncContext = request.startAsync();
         asyncContext.setTimeout(0); // brak limitu czasu
 
