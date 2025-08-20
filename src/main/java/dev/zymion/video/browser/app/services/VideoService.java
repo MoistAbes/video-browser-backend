@@ -1,11 +1,16 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.enums.StructureTypeEnum;
 import dev.zymion.video.browser.app.models.entities.ContentEntity;
 import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
+import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.entities.ShowStructureEntity;
 import dev.zymion.video.browser.app.repositories.ContentRepository;
 import dev.zymion.video.browser.app.repositories.MediaItemRepository;
 import dev.zymion.video.browser.app.config.properties.AppPathProperties;
+import dev.zymion.video.browser.app.repositories.ShowRepository;
+import dev.zymion.video.browser.app.repositories.ShowStructureRepository;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import dev.zymion.video.browser.app.services.util.VideoScannerService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,15 +42,19 @@ public class VideoService {
     private final ShowService showService;
     private final MediaItemRepository mediaItemRepository;
     private final ContentRepository contentRepository;
+    private final ShowRepository showRepository;
+    private final ShowStructureRepository showStructureRepository;
 
     @Autowired
-    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ContentRepository contentRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ContentRepository contentRepository, ShowRepository showRepository, ShowStructureRepository showStructureRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.showService = showService;
         this.mediaItemRepository = mediaItemRepository;
         this.contentRepository = contentRepository;
         this.videoFolder = appPathProperties.getVideoFolder();
+        this.showRepository = showRepository;
+        this.showStructureRepository = showStructureRepository;
     }
 
     //ToDO
@@ -90,6 +99,10 @@ public class VideoService {
         removeMissingFiles(currentRelativePaths);
 
         showService.setUpShows(savedMediaItems);
+
+
+        //ustawianie struktur shows
+        setUpShowsStructureType();
     }
 
 
@@ -212,6 +225,22 @@ public class VideoService {
             throw new RuntimeException("Cannot compute metadata hash", e);
         }
     }
+
+    private void setUpShowsStructureType() {
+        List<ShowEntity> allShows = showRepository.findAll();
+
+        for (ShowEntity show : allShows) {
+            StructureTypeEnum type = StructureTypeEnum.fromShow(show);
+
+            ShowStructureEntity structure = showStructureRepository.findByName(type)
+                    .orElseThrow(() -> new IllegalStateException("Brak zdefiniowanej struktury: " + type));
+
+            show.setStructure(structure);
+        }
+
+        showRepository.saveAll(allShows);
+    }
+
 
     //ToDO to moze kiedy bede uzywal
 //    public List<String> getAllThumbnails(String rootFolderPath) {

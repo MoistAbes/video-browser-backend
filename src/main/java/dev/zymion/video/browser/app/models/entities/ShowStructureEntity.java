@@ -10,12 +10,14 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "show_structures")
 public class ShowStructureEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING) // <--- to jest kluczowe
     @Column(nullable = false, unique = true)
     private StructureTypeEnum name;
 

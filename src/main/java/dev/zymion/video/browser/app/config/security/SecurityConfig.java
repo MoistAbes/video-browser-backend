@@ -38,11 +38,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/assets/**",        // Angular assets
+                                "/media/**",         // fonty, ikony
+                                "/static/**",        // standardowa ścieżka dla static w Spring Boot
+                                "/*.js", "/*.css",   // bundlowane pliki Angulara
+                                "/login", // ścieżki routingu SPA
+                                "/home" // ścieżki routingu SPA
+                        ).permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/videos/icon").permitAll()
+                        .requestMatchers("/videos/image").permitAll()
                         .requestMatchers("/videos/subtitles/**").permitAll()
                         .requestMatchers("/stream/**").permitAll()
-                        .requestMatchers("/error").permitAll()   // 👈
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)

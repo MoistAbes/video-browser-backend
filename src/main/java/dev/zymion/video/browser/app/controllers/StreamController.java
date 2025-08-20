@@ -7,9 +7,11 @@ import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.file.Path;
 
 @CrossOrigin(origins = "http://localhost:4200")  // dopasuj do swojego frontu
@@ -43,7 +45,7 @@ public class StreamController {
 
 
 
-    @GetMapping(value = "/normal", produces = "video/mp4")
+    @GetMapping(value = "/normal")
     public void streamVideo(@RequestParam("path") String relativePath,
                             HttpServletRequest request,
                             HttpServletResponse response) {
@@ -53,9 +55,12 @@ public class StreamController {
         asyncContext.start(() -> {
             try {
                 streamService.getStream(relativePath, request, response);
+            } catch (ClientAbortException | SocketTimeoutException e) {
+                log.debug("Klient przerwał połączenie: {}", e.getClass().getSimpleName());
             } catch (IOException e) {
-                // ignorujemy przerwane połączenie (przewijanie, zamknięcie okna)
-                if (e.getMessage() == null || !e.getMessage().contains("Connection reset")) {
+                if (e.getMessage() != null && e.getMessage().contains("Connection reset")) {
+                    log.debug("Klient zresetował połączenie (Connection reset by peer)");
+                } else {
                     log.error("Błąd podczas streamowania wideo", e);
                 }
             } catch (Exception e) {
