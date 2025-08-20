@@ -28,7 +28,7 @@ public class SeasonEntity {
     public String toString() {
         return "SeasonEntity{" +
                 "id=" + id +
-//                "show id=" + show.getId() +
+                "number=" + number +
                 "episodes=" + episodes +
                 '}';
     }

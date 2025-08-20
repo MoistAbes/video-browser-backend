@@ -27,14 +27,6 @@ public class SeasonMapper {
 
     }
 
-    public Set<SeasonDto> mapToDtoSet(Set<SeasonEntity> seasonEntities) {
-
-        return seasonEntities.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toSet());
-
-    }
-
     public List<SeasonDto> mapToDtoList(List<SeasonEntity> seasonEntities) {
 
         return seasonEntities.stream()

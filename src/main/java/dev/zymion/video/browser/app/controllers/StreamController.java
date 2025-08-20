@@ -1,7 +1,7 @@
 package dev.zymion.video.browser.app.controllers;
 
 import dev.zymion.video.browser.app.services.StreamService;
-import dev.zymion.video.browser.app.services.helper.AppPathProperties;
+import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +46,7 @@ public class StreamController {
     @GetMapping(value = "/normal", produces = "video/mp4")
     public void streamVideo(@RequestParam("path") String relativePath,
                             HttpServletRequest request,
-                            HttpServletResponse response) throws IOException {
+                            HttpServletResponse response) {
         AsyncContext asyncContext = request.startAsync();
         asyncContext.setTimeout(0); // brak limitu czasu
 

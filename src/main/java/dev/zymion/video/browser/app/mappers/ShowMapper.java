@@ -28,7 +28,7 @@ public class ShowMapper {
               showEntity.getRootPath(),
               seasonMapper.mapToDtoList(showEntity.getSeasons()),
               contentMapper.mapToDtoList(showEntity.getMovies()),
-              showEntity.getCategory() != null ? showEntity.getCategory().getName() : null,
+              showEntity.getStructure() != null ? showEntity.getStructure().getName() : null,
               showEntity.getGenres().stream()
                       .map(GenreEntity::getName)
                       .collect(Collectors.toSet())

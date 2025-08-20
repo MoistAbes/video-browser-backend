@@ -27,13 +27,6 @@ public class ContentMapper {
         );
     }
 
-    public Set<ContentDto> mapToDtoSet(Set<ContentEntity> contentEntities) {
-
-        return contentEntities.stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toSet());
-    }
-
     public List<ContentDto> mapToDtoList(List<ContentEntity> contentEntities) {
 
         return contentEntities.stream()

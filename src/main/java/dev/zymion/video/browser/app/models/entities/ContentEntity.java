@@ -21,7 +21,7 @@ public class ContentEntity {
     @Column(nullable = false)
     private MediaTypeEnum type; // MOVIE or EPISODE
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "media_item_id", nullable = false)
     private MediaItemEntity mediaItem;
 

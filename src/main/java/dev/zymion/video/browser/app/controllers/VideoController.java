@@ -1,11 +1,6 @@
 package dev.zymion.video.browser.app.controllers;
 
 import dev.zymion.video.browser.app.services.VideoService;
-import dev.zymion.video.browser.app.services.helper.AppPathProperties;
-import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -16,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:4200")  // dopasuj do swojego frontu
 @RestController
@@ -32,8 +25,6 @@ public class VideoController {
         this.videoService = videoService;
     }
 
-
-
     @GetMapping("/scan")
     public ResponseEntity<Void> scanAllVideos() {
         try {
@@ -41,12 +32,8 @@ public class VideoController {
         }catch (Exception e) {
             e.printStackTrace();
         }
-
         return new ResponseEntity<>(HttpStatus.OK);
-
     }
-
-
 
     @GetMapping("/subtitles/{subtitleTitle}")
     public ResponseEntity<Resource> getSubtitle(@RequestParam("path") String relativePath, @PathVariable("subtitleTitle") String subtitleTitle) throws IOException {
@@ -57,13 +44,10 @@ public class VideoController {
                 .body(subtitles);
     }
 
-
-
-    //    ToDO niby tutaj icon jest ale tym moge pobrac jakikolwiek img jest zarzuce dobra sciezke
-    @GetMapping("/icon")
-    public ResponseEntity<Resource> getVideoIcon(@RequestParam("path") String relativePath) {
+    @GetMapping("/image")
+    public ResponseEntity<Resource> getImageResource(@RequestParam("path") String relativePath) {
         try {
-            Resource icon = videoService.getVideoIcon(relativePath);
+            Resource icon = videoService.getImageResource(relativePath);
             // Zgadywanie MIME typu
             String contentType = Files.probeContentType(icon.getFile().toPath());
             if (contentType == null) {
@@ -86,12 +70,12 @@ public class VideoController {
         }
     }
 
-
-    @GetMapping("/thumbnails")
-    public ResponseEntity<List<String>> findAllVideoInfoThumbnails(@RequestParam String rootFolderPath) {
-
-        List<String> result = videoService.getAllThumbnails(rootFolderPath);
-        return ResponseEntity.ok(result);
-    }
+        //ToDO to moze kiedys bede uzywal
+//    @GetMapping("/thumbnails")
+//    public ResponseEntity<List<String>> findAllVideoInfoThumbnails(@RequestParam String rootFolderPath) {
+//
+//        List<String> result = videoService.getAllThumbnails(rootFolderPath);
+//        return ResponseEntity.ok(result);
+//    }
 
 }
