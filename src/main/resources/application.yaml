@@ -1,4 +1,6 @@
 app:
+  jwt:
+    secret-key: ff0d5cc9e17cedaafd741b7a198cb90a
   paths:
     video-folder: E:/VIDEO
     subtitle-folder: subtitles

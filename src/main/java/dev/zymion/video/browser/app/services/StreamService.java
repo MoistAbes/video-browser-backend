@@ -1,5 +1,6 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,8 +15,11 @@ import java.util.Optional;
 @Service
 public class StreamService {
 
+    private final Path videoFolder;
 
-    private final Path videoFolder = Paths.get("E:/VIDEO");
+    public StreamService(AppPathProperties appPathProperties) {
+        this.videoFolder = appPathProperties.getVideoFolder();
+    }
 
 
     public void getStream(String relativePath, HttpServletRequest request, HttpServletResponse response) throws IOException {

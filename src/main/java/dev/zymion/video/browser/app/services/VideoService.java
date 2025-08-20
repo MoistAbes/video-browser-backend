@@ -5,13 +5,9 @@ import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.repositories.ContentRepository;
 import dev.zymion.video.browser.app.repositories.MediaItemRepository;
-import dev.zymion.video.browser.app.repositories.ShowRepository;
-import dev.zymion.video.browser.app.services.helper.AppPathProperties;
+import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import dev.zymion.video.browser.app.services.util.VideoScannerService;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -20,8 +16,6 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
@@ -30,28 +24,28 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class VideoService {
 
-    private final Path videoFolder = Paths.get("E:/VIDEO");
+    private final Path videoFolder;
+
+
     private final AppPathProperties appPathProperties;
     private final VideoScannerService videoScannerService;
     private final ShowService showService;
-    private final ShowRepository showRepository;
     private final MediaItemRepository mediaItemRepository;
     private final ContentRepository contentRepository;
 
     @Autowired
-    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, ShowRepository showRepository, MediaItemRepository mediaItemRepository, ContentRepository contentRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ContentRepository contentRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.showService = showService;
-        this.showRepository = showRepository;
         this.mediaItemRepository = mediaItemRepository;
         this.contentRepository = contentRepository;
+        this.videoFolder = appPathProperties.getVideoFolder();
     }
 
     //ToDO
@@ -219,27 +213,28 @@ public class VideoService {
         }
     }
 
-    public List<String> getAllThumbnails(String rootFolderPath) {
-        List<String> thumbnails = new ArrayList<>();
+    //ToDO to moze kiedy bede uzywal
+//    public List<String> getAllThumbnails(String rootFolderPath) {
+//        List<String> thumbnails = new ArrayList<>();
+//
+//        // Załóżmy, że masz pole baseVideoFolder ustawione gdzieś wcześniej
+//        Path thumbnailsDir = Paths.get(String.valueOf(videoFolder), rootFolderPath, "thumbnails");
+//
+//        if (Files.exists(thumbnailsDir) && Files.isDirectory(thumbnailsDir)) {
+//            try (Stream<Path> paths = Files.list(thumbnailsDir)) {
+//                thumbnails = paths
+//                        .filter(Files::isRegularFile)
+//                        .map(path -> path.getFileName().toString()) // tylko nazwy plików
+//                        .collect(Collectors.toList());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        return thumbnails;
+//    }
 
-        // Załóżmy, że masz pole baseVideoFolder ustawione gdzieś wcześniej
-        Path thumbnailsDir = Paths.get(String.valueOf(videoFolder), rootFolderPath, "thumbnails");
-
-        if (Files.exists(thumbnailsDir) && Files.isDirectory(thumbnailsDir)) {
-            try (Stream<Path> paths = Files.list(thumbnailsDir)) {
-                thumbnails = paths
-                        .filter(Files::isRegularFile)
-                        .map(path -> path.getFileName().toString()) // tylko nazwy plików
-                        .collect(Collectors.toList());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return thumbnails;
-    }
-
-    public Resource getVideoIcon(String relativePath) throws FileNotFoundException, MalformedURLException {
+    public Resource getImageResource(String relativePath) throws FileNotFoundException, MalformedURLException {
         Path fullPath = videoFolder.resolve(relativePath).normalize();
 
         // Zabezpieczenie przed wyjściem poza folder
@@ -252,25 +247,6 @@ public class VideoService {
         }
 
         return new UrlResource(fullPath.toUri());
-    }
-
-
-    public Resource getSeasonBackdrop(String relativePath) throws FileNotFoundException, MalformedURLException {
-        Path fullPath = videoFolder.resolve(relativePath).normalize();
-
-        System.out.println("full path = " + fullPath);
-
-        // Zabezpieczenie przed wyjściem poza folder
-        if (!fullPath.startsWith(videoFolder.toAbsolutePath())) {
-            throw new SecurityException("Attempt to access outside of video folder");
-        }
-
-        if (!Files.exists(fullPath) || !Files.isRegularFile(fullPath)) {
-            throw new FileNotFoundException("Backdrop not found: " + relativePath);
-        }
-
-        return new UrlResource(fullPath.toUri());
-
     }
 
     public Resource getSubtitles(String relativePath, String subtitleName) throws MalformedURLException, FileNotFoundException {
@@ -287,7 +263,5 @@ public class VideoService {
 
         return new UrlResource(subtitlePath.toUri());
     }
-
-
 
 }

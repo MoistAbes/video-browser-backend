@@ -11,7 +11,7 @@ public enum MediaTypeEnum {
         return switch (this) {
             case MOVIE -> "Movie";
             case EPISODE -> "Episode";
-            case UNKNOWN -> "Unknown";
+            default -> "Unknown";
         };
     }
 

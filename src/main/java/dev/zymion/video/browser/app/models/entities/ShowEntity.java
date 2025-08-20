@@ -41,8 +41,8 @@ public class ShowEntity {
     private List<ContentEntity> movies = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
+    @JoinColumn(name = "show_structure_id")
+    private ShowStructureEntity structure;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

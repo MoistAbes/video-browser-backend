@@ -1,5 +1,6 @@
 package dev.zymion.video.browser.app.services.security;
 
+import dev.zymion.video.browser.app.config.properties.JwtProperties;
 import dev.zymion.video.browser.app.enums.RoleEnum;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
 import io.jsonwebtoken.Claims;
@@ -21,12 +22,20 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
+
+    private final String SECRET_KEY;
+
+
     /**
      * Secret key used to sign the JWT tokens.
      * Must be at least 256 bits for HS256 algorithm.
      * In production, store this securely (e.g., environment variable).
      */
-    private static final String SECRET_KEY = "ff0d5cc9e17cedaafd741b7a198cb90a";
+    public JwtService(JwtProperties jwtProperties) {
+        this.SECRET_KEY = jwtProperties.getSecretKey();
+    }
+
+
 
     /**
      * Token expiration time in milliseconds.

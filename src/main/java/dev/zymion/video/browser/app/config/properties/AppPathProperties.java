@@ -1,12 +1,14 @@
-package dev.zymion.video.browser.app.services.helper;
+package dev.zymion.video.browser.app.config.properties;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Setter
 @Component
 @ConfigurationProperties(prefix = "app.paths")
 public class AppPathProperties {
@@ -20,15 +22,6 @@ public class AppPathProperties {
     // Gettery i settery
     public Path getVideoFolder() {
         return Paths.get(videoFolder);
-    }
-
-    // Required setters for Spring to inject values
-    public void setVideoFolder(String videoFolder) {
-        this.videoFolder = videoFolder;
-    }
-
-    public void setSubtitleFolder(String subtitleFolder) {
-        this.subtitleFolder = subtitleFolder;
     }
 
 }

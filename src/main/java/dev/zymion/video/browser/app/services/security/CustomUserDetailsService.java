@@ -33,20 +33,5 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return new CustomUserDetails(user.getId(), user.getUsername(), user.getPassword(), authorities);
     }
-
-
-//    @Override
-//    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//        UserInfoEntity user = userInfoRepository.findByUsername(username)
-//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-//
-//        return new org.springframework.security.core.userdetails.User(
-//                user.getUsername(),
-//                user.getPassword(),
-//                user.getRoles().stream()
-//                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
-//                        .collect(Collectors.toList())
-//        );
-//    }
 }
 
