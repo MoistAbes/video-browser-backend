@@ -32,7 +32,6 @@ public class UserInfoEntity {
     )
     private Set<RoleEntity> roles = new HashSet<>();
 
-
     @Override
     public String toString() {
         return "UserInfoEntity{" +

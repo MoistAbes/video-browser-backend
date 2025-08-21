@@ -2,7 +2,6 @@ package dev.zymion.video.browser.app.models.dto;
 
 import dev.zymion.video.browser.app.enums.GenreEnum;
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
-
 import java.util.List;
 import java.util.Set;
 

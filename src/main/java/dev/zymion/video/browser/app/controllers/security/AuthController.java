@@ -7,7 +7,6 @@ import dev.zymion.video.browser.app.repositories.UserInfoRepository;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.JwtService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 @Slf4j
 public class AuthController {
-
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -40,10 +38,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<JwtTokenDto> login(@RequestBody AuthRequestDto request) {
-        //ToDO tego moge uzyc do wyciagania danych z przeslanego tokena
-        //CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        //Long userId = userDetails.getId();
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );

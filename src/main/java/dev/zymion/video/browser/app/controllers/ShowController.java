@@ -45,9 +45,8 @@ public class ShowController {
         return ResponseEntity.ok(result);
     }
 
-
     /**
-     * Okrojona lista tylko do nazwy sciezki root i id
+     * Okrojona lista tylko do nazwy sciezki root i id i nazwy
      * @return
      */
     @GetMapping("find/with-root-path")

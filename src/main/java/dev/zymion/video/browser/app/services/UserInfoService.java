@@ -3,24 +3,29 @@ package dev.zymion.video.browser.app.services;
 import dev.zymion.video.browser.app.enums.RoleEnum;
 import dev.zymion.video.browser.app.exceptions.RoleNotFoundException;
 import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
+import dev.zymion.video.browser.app.mappers.UserInfoMapper;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
+import dev.zymion.video.browser.app.models.dto.UserInfoDto;
 import dev.zymion.video.browser.app.models.entities.user.RoleEntity;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
 import dev.zymion.video.browser.app.repositories.RoleRepository;
 import dev.zymion.video.browser.app.repositories.UserInfoRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.List;
 import java.util.Set;
 
 @Service
 public class UserInfoService {
 
     private final UserInfoRepository userInfoRepository;
+    private final UserInfoMapper userInfoMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserInfoService(UserInfoRepository userInfoRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserInfoService(UserInfoRepository userInfoRepository, UserInfoMapper userInfoMapper, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userInfoRepository = userInfoRepository;
+        this.userInfoMapper = userInfoMapper;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -45,6 +50,11 @@ public class UserInfoService {
         }
 
         createUser(request);
+    }
+
+    public List<UserInfoDto> findAllFriends(Long userId) {
+        List<UserInfoEntity> users = userInfoRepository.findAllFriends(userId);
+        return userInfoMapper.mapToDtoList(users);
     }
 }
 
