@@ -24,10 +24,10 @@ public class UserInfoEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "icon_color", nullable = false)
+    @Column(name = "icon_color")
     private String iconColor; // np. "#FF5733"
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserStatusEntity status;
 
 

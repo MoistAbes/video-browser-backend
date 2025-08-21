@@ -3,6 +3,7 @@ package dev.zymion.video.browser.app.services;
 import dev.zymion.video.browser.app.enums.RoleEnum;
 import dev.zymion.video.browser.app.exceptions.RoleNotFoundException;
 import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
+import dev.zymion.video.browser.app.exceptions.UserNotFoundException;
 import dev.zymion.video.browser.app.mappers.UserInfoMapper;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
 import dev.zymion.video.browser.app.models.dto.UserInfoDto;
@@ -55,6 +56,16 @@ public class UserInfoService {
     public List<UserInfoDto> findAllFriends(Long userId) {
         List<UserInfoEntity> users = userInfoRepository.findAllFriends(userId);
         return userInfoMapper.mapToDtoList(users);
+    }
+
+    public void updateIconColor(Long userId ,String iconColor) {
+        userInfoRepository.updateIconColor(userId ,iconColor);
+    }
+
+    public UserInfoDto findById(Long userId) {
+        return userInfoRepository.findById(userId)
+                .map(userInfoMapper::mapToDto)
+                .orElseThrow(UserNotFoundException::new); // Supplier
     }
 }
 

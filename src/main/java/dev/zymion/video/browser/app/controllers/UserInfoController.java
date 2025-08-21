@@ -4,9 +4,8 @@ import dev.zymion.video.browser.app.models.dto.UserInfoDto;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.SecurityUtilService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -22,6 +21,15 @@ public class UserInfoController {
         this.securityUtilService = securityUtilService;
     }
 
+    @GetMapping("/userInfo")
+    public ResponseEntity<UserInfoDto> getUserInfo() {
+        Long userId = securityUtilService.getCurrentUserId();
+
+        UserInfoDto user = userInfoService.findById(userId);
+
+        return ResponseEntity.ok(user);
+    }
+
 
     @GetMapping("/friends")
     public ResponseEntity<List<UserInfoDto>> findAllFriends() {
@@ -33,5 +41,13 @@ public class UserInfoController {
 
         return ResponseEntity.ok(friends);
     }
+
+    @PutMapping("/icon/color")
+    public ResponseEntity<Void> updateIconColor(@RequestParam String iconColor) {
+        Long userId = securityUtilService.getCurrentUserId();
+        userInfoService.updateIconColor(userId, iconColor);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }
