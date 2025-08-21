@@ -1,6 +1,7 @@
 package dev.zymion.video.browser.app.models.entities.user;
 
 
+import dev.zymion.video.browser.app.models.entities.websocket.UserStatusEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.HashSet;
@@ -22,6 +23,12 @@ public class UserInfoEntity {
     private String username;
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "icon_color", nullable = false)
+    private String iconColor; // np. "#FF5733"
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private UserStatusEntity status;
 
 
     @ManyToMany(fetch = FetchType.EAGER)

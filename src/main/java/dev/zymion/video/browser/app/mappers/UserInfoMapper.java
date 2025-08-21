@@ -13,7 +13,8 @@ public class UserInfoMapper {
     public UserInfoDto mapToDto(UserInfoEntity userInfo) {
         return new UserInfoDto(
                 userInfo.getId(),
-                userInfo.getUsername()
+                userInfo.getUsername(),
+                userInfo.getIconColor()
         );
     }
 
