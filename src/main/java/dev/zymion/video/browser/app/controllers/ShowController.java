@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.controllers;
 
-import dev.zymion.video.browser.app.models.dto.ShowDto;
+import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
 import dev.zymion.video.browser.app.services.ShowService;
 import lombok.extern.slf4j.Slf4j;

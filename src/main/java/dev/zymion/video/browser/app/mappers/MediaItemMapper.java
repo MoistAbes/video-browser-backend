@@ -1,7 +1,7 @@
 package dev.zymion.video.browser.app.mappers;
 
-import dev.zymion.video.browser.app.models.dto.MediaItemDto;
-import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.models.dto.show.MediaItemDto;
+import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

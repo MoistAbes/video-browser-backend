@@ -1,11 +1,11 @@
 package dev.zymion.video.browser.app.controllers;
 
-import dev.zymion.video.browser.app.models.dto.UserInfoDto;
+import dev.zymion.video.browser.app.models.dto.user.UserInfoDto;
+import dev.zymion.video.browser.app.models.dto.user.UserInfoWithStatusDto;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.SecurityUtilService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -32,20 +32,29 @@ public class UserInfoController {
 
 
     @GetMapping("/friends")
-    public ResponseEntity<List<UserInfoDto>> findAllFriends() {
+    public ResponseEntity<List<UserInfoWithStatusDto>> findAllFriends() {
 //        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 //        Long userId = userDetails.getId();
         Long userId = securityUtilService.getCurrentUserId();
 
-        List<UserInfoDto> friends = userInfoService.findAllFriends(userId);
+        List<UserInfoWithStatusDto> friends = userInfoService.findAllFriends(userId);
 
         return ResponseEntity.ok(friends);
     }
 
-    @PutMapping("/icon/color")
+    @PutMapping("/update/icon/color")
     public ResponseEntity<Void> updateIconColor(@RequestParam String iconColor) {
         Long userId = securityUtilService.getCurrentUserId();
         userInfoService.updateIconColor(userId, iconColor);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/update/icon/{iconId}")
+    public ResponseEntity<Void> updateIconStyle(@PathVariable Long iconId) {
+        Long userId = securityUtilService.getCurrentUserId();
+
+        userInfoService.updateUserIcon(userId ,iconId);
+
         return ResponseEntity.noContent().build();
     }
 

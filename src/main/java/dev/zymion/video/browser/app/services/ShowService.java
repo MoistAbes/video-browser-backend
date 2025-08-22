@@ -1,15 +1,15 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.models.dto.ShowDto;
+import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.exceptions.ShowMappingException;
 import dev.zymion.video.browser.app.mappers.ShowMapper;
-import dev.zymion.video.browser.app.models.entities.ContentEntity;
-import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
-import dev.zymion.video.browser.app.models.entities.SeasonEntity;
-import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.entities.show.ContentEntity;
+import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
+import dev.zymion.video.browser.app.models.entities.show.SeasonEntity;
+import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
-import dev.zymion.video.browser.app.repositories.ShowRepository;
+import dev.zymion.video.browser.app.repositories.show.ShowRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

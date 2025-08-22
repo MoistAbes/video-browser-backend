@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.enums;
 
-import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 
 public enum StructureTypeEnum {
 

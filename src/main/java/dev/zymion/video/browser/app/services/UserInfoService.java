@@ -6,11 +6,16 @@ import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
 import dev.zymion.video.browser.app.exceptions.UserNotFoundException;
 import dev.zymion.video.browser.app.mappers.UserInfoMapper;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
-import dev.zymion.video.browser.app.models.dto.UserInfoDto;
+import dev.zymion.video.browser.app.models.dto.user.UserInfoDto;
+import dev.zymion.video.browser.app.models.dto.user.UserInfoWithStatusDto;
 import dev.zymion.video.browser.app.models.entities.user.RoleEntity;
+import dev.zymion.video.browser.app.models.entities.user.UserIconEntity;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
-import dev.zymion.video.browser.app.repositories.RoleRepository;
-import dev.zymion.video.browser.app.repositories.UserInfoRepository;
+import dev.zymion.video.browser.app.models.entities.user.UserStatusEntity;
+import dev.zymion.video.browser.app.repositories.user.RoleRepository;
+import dev.zymion.video.browser.app.repositories.user.UserIconRepository;
+import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -23,12 +28,14 @@ public class UserInfoService {
     private final UserInfoMapper userInfoMapper;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserIconRepository userIconRepository;
 
-    public UserInfoService(UserInfoRepository userInfoRepository, UserInfoMapper userInfoMapper, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserInfoService(UserInfoRepository userInfoRepository, UserInfoMapper userInfoMapper, RoleRepository roleRepository, PasswordEncoder passwordEncoder, UserIconRepository userIconRepository) {
         this.userInfoRepository = userInfoRepository;
         this.userInfoMapper = userInfoMapper;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userIconRepository = userIconRepository;
     }
 
     public void createUser(AuthRequestDto authRequestDto) {
@@ -36,9 +43,16 @@ public class UserInfoService {
         RoleEntity userRole = roleRepository.findByName(RoleEnum.USER)
                 .orElseThrow(() -> new RoleNotFoundException(RoleEnum.USER));
 
+        UserIconEntity defaultIcon = userIconRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No icons found"));
+
         UserInfoEntity userInfoEntity = UserInfoEntity.builder()
                 .username(authRequestDto.username())
                 .password(passwordEncoder.encode(authRequestDto.password()))
+                .status(UserStatusEntity.builder().build())
+                .icon(defaultIcon)
                 .roles(Set.of(userRole))
                 .build();
 
@@ -53,9 +67,9 @@ public class UserInfoService {
         createUser(request);
     }
 
-    public List<UserInfoDto> findAllFriends(Long userId) {
+    public List<UserInfoWithStatusDto> findAllFriends(Long userId) {
         List<UserInfoEntity> users = userInfoRepository.findAllFriends(userId);
-        return userInfoMapper.mapToDtoList(users);
+        return userInfoMapper.mapToDtoListWithStatus(users);
     }
 
     public void updateIconColor(Long userId ,String iconColor) {
@@ -67,5 +81,18 @@ public class UserInfoService {
                 .map(userInfoMapper::mapToDto)
                 .orElseThrow(UserNotFoundException::new); // Supplier
     }
+
+    @Transactional
+    public void updateUserIcon(Long userId, Long iconId) {
+        UserInfoEntity user = userInfoRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserIconEntity icon = userIconRepository.findById(iconId)
+                .orElseThrow(() -> new RuntimeException("Icon not found"));
+
+        user.setIcon(icon);
+        userInfoRepository.save(user);
+    }
+
 }
 

@@ -1,16 +1,16 @@
 package dev.zymion.video.browser.app.services;
 
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
-import dev.zymion.video.browser.app.models.entities.ContentEntity;
-import dev.zymion.video.browser.app.models.entities.MediaItemEntity;
+import dev.zymion.video.browser.app.models.entities.show.ContentEntity;
+import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
-import dev.zymion.video.browser.app.models.entities.ShowEntity;
-import dev.zymion.video.browser.app.models.entities.ShowStructureEntity;
-import dev.zymion.video.browser.app.repositories.ContentRepository;
-import dev.zymion.video.browser.app.repositories.MediaItemRepository;
+import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
+import dev.zymion.video.browser.app.models.entities.show.ShowStructureEntity;
+import dev.zymion.video.browser.app.repositories.show.ContentRepository;
+import dev.zymion.video.browser.app.repositories.show.MediaItemRepository;
 import dev.zymion.video.browser.app.config.properties.AppPathProperties;
-import dev.zymion.video.browser.app.repositories.ShowRepository;
-import dev.zymion.video.browser.app.repositories.ShowStructureRepository;
+import dev.zymion.video.browser.app.repositories.show.ShowRepository;
+import dev.zymion.video.browser.app.repositories.show.ShowStructureRepository;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
 import dev.zymion.video.browser.app.services.util.VideoScannerService;
 import lombok.extern.slf4j.Slf4j;

@@ -3,7 +3,7 @@ package dev.zymion.video.browser.app.controllers.security;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
 import dev.zymion.video.browser.app.models.dto.JwtTokenDto;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
-import dev.zymion.video.browser.app.repositories.UserInfoRepository;
+import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.JwtService;
 import lombok.extern.slf4j.Slf4j;

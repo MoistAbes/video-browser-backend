@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.models.entities;
+package dev.zymion.video.browser.app.models.entities.show;
 
 import jakarta.persistence.*;
 import lombok.*;

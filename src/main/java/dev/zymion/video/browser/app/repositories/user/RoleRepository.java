@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.repositories;
+package dev.zymion.video.browser.app.repositories.user;
 
 import dev.zymion.video.browser.app.enums.RoleEnum;
 import dev.zymion.video.browser.app.models.entities.user.RoleEntity;

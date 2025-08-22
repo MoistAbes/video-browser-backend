@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.repositories.SeasonRepository;
+import dev.zymion.video.browser.app.repositories.show.SeasonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

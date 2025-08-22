@@ -1,8 +1,8 @@
 package dev.zymion.video.browser.app.mappers;
 
-import dev.zymion.video.browser.app.models.dto.ShowDto;
-import dev.zymion.video.browser.app.models.entities.GenreEntity;
-import dev.zymion.video.browser.app.models.entities.ShowEntity;
+import dev.zymion.video.browser.app.models.dto.show.ShowDto;
+import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
+import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

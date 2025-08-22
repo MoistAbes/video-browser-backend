@@ -1,12 +1,10 @@
 package dev.zymion.video.browser.app.mappers;
 
-import dev.zymion.video.browser.app.models.dto.ContentDto;
-import dev.zymion.video.browser.app.models.entities.ContentEntity;
+import dev.zymion.video.browser.app.models.dto.show.ContentDto;
+import dev.zymion.video.browser.app.models.entities.show.ContentEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ContentMapper {

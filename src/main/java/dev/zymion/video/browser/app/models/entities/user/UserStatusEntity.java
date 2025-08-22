@@ -1,19 +1,19 @@
-package dev.zymion.video.browser.app.models.entities.websocket;
+package dev.zymion.video.browser.app.models.entities.user;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.Optional;
 
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserStatusEntity {
 
     @Id
@@ -21,7 +21,10 @@ public class UserStatusEntity {
     private Long id;
 
     private String videoTitle;
-    private boolean isOnline;
-    private boolean isStreaming;
+    private boolean isOnline = false;
+    private boolean isWatching = false;
 
+    public Optional<String> getVideoTitle() {
+        return Optional.of(videoTitle);
+    }
 }

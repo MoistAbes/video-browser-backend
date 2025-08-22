@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.models.dto;
+package dev.zymion.video.browser.app.models.dto.show;
 
 import java.util.List;
 

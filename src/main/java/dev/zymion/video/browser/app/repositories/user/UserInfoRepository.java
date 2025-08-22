@@ -1,4 +1,4 @@
-package dev.zymion.video.browser.app.repositories;
+package dev.zymion.video.browser.app.repositories.user;
 
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
 import jakarta.transaction.Transactional;
@@ -24,4 +24,5 @@ public interface UserInfoRepository extends JpaRepository<UserInfoEntity, Long> 
     @Transactional
     @Query("UPDATE UserInfoEntity u SET u.iconColor = :iconColor WHERE u.id = :userId")
     void updateIconColor(@Param("userId") Long userId, @Param("iconColor") String iconColor);
+
 }

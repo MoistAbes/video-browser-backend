@@ -1,6 +1,6 @@
 package dev.zymion.video.browser.app.controllers.websocket;
 
-import dev.zymion.video.browser.app.models.entities.websocket.UserStatusEntity;
+import dev.zymion.video.browser.app.models.entities.user.UserStatusEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;

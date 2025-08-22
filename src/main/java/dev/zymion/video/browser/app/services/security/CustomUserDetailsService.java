@@ -1,8 +1,7 @@
 package dev.zymion.video.browser.app.services.security;
 
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
-import dev.zymion.video.browser.app.repositories.UserInfoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
