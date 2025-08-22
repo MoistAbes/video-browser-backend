@@ -23,8 +23,11 @@ public class MediaItemEntity {
     private String parentTitle;
     private Integer seasonNumber;
     private Integer episodeNumber;
+
+    //ToDO to samo pole mamy w mediaItem wiec musi zostac albo tu albo w media item duplikacja jest nipotrzebna
     @Enumerated(EnumType.STRING)
     private MediaTypeEnum type; // MOVIE / EPISODE
+
     @Column(nullable = false)
     private String rootPath;
     @Column(nullable = false)

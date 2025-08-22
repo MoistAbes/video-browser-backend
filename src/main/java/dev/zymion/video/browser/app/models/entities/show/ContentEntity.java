@@ -17,6 +17,7 @@ public class ContentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //ToDO to samo pole mamy w mediaItem wiec musi zostac albo tu albo w media item duplikacja jest nipotrzebna
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MediaTypeEnum type; // MOVIE or EPISODE
@@ -24,8 +25,5 @@ public class ContentEntity {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "media_item_id", nullable = false)
     private MediaItemEntity mediaItem;
-
-
-
 
 }
