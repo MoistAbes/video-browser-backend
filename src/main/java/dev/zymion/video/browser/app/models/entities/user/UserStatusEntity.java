@@ -25,6 +25,6 @@ public class UserStatusEntity {
     private boolean isWatching = false;
 
     public Optional<String> getVideoTitle() {
-        return Optional.of(videoTitle);
+        return Optional.ofNullable(videoTitle);
     }
 }

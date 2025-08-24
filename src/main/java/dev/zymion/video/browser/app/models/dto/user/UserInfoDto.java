@@ -4,5 +4,5 @@ public record UserInfoDto(
         Long id,
         String username,
         String iconColor,
-        String icon
+        UserIconDto icon
 ) {}

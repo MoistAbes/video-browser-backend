@@ -27,6 +27,8 @@ public class UserInfoController {
 
         UserInfoDto user = userInfoService.findById(userId);
 
+        System.out.println("current user: " + user);
+
         return ResponseEntity.ok(user);
     }
 

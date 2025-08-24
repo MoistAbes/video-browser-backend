@@ -10,9 +10,11 @@ import java.util.List;
 public class UserInfoMapper {
 
     private final UserStatusMapper userStatusMapper;
+    private final UserIconMapper userIconMapper;
 
-    public UserInfoMapper(UserStatusMapper userStatusMapper) {
+    public UserInfoMapper(UserStatusMapper userStatusMapper, UserIconMapper userIconMapper) {
         this.userStatusMapper = userStatusMapper;
+        this.userIconMapper = userIconMapper;
     }
 
     public UserInfoDto mapToDto(UserInfoEntity userInfo) {
@@ -20,7 +22,7 @@ public class UserInfoMapper {
                 userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getIconColor(),
-                userInfo.getIcon().getName()
+                userIconMapper.mapToDto(userInfo.getIcon())
         );
     }
 
