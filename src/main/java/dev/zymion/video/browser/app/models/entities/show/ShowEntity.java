@@ -37,8 +37,8 @@ public class ShowEntity {
     private List<SeasonEntity> seasons = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "show_id") // kolumna w ContentEntity
-    private List<ContentEntity> movies = new ArrayList<>();
+    @JoinColumn(name = "show_id") // kolumna w MediaItemEntity
+    private List<MediaItemEntity> movies = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "show_structure_id")

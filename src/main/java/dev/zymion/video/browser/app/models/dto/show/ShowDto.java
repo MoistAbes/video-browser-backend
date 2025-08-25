@@ -10,7 +10,7 @@ public record ShowDto (
     String name,
     String rootPath,
     List<SeasonDto> seasons,
-    List<ContentDto> movies,
+    List<MediaItemDto> movies,
     StructureTypeEnum structure,
     Set<GenreEnum> genres
 ) {}

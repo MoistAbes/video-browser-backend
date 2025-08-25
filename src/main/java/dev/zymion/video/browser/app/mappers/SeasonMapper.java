@@ -9,10 +9,10 @@ import java.util.List;
 @Service
 public class SeasonMapper {
 
-    private final ContentMapper contentMapper;
+    private final MediaItemMapper mediaItemMapper;
 
-    public SeasonMapper(ContentMapper contentMapper) {
-        this.contentMapper = contentMapper;
+    public SeasonMapper(MediaItemMapper mediaItemMapper) {
+        this.mediaItemMapper = mediaItemMapper;
     }
 
     public SeasonDto mapToDto(SeasonEntity seasonEntity) {
@@ -20,7 +20,7 @@ public class SeasonMapper {
         return new SeasonDto(
                 seasonEntity.getId(),
                 seasonEntity.getNumber(),
-                contentMapper.mapToDtoList(seasonEntity.getEpisodes())
+                mediaItemMapper.mapToDtoList(seasonEntity.getEpisodes())
         );
 
     }

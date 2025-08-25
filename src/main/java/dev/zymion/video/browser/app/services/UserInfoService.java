@@ -72,9 +72,7 @@ public class UserInfoService {
         return userInfoMapper.mapToDtoListWithStatus(users);
     }
 
-    public void updateIconColor(Long userId ,String iconColor) {
-        userInfoRepository.updateIconColor(userId ,iconColor);
-    }
+
 
     public UserInfoDto findById(Long userId) {
         return userInfoRepository.findById(userId)
@@ -82,8 +80,9 @@ public class UserInfoService {
                 .orElseThrow(UserNotFoundException::new); // Supplier
     }
 
+
     @Transactional
-    public void updateUserIcon(Long userId, Long iconId) {
+    public void updateUserIconAndColor(Long userId, Long iconId, String iconColor) {
         UserInfoEntity user = userInfoRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -91,8 +90,9 @@ public class UserInfoService {
                 .orElseThrow(() -> new RuntimeException("Icon not found"));
 
         user.setIcon(icon);
+        user.setIconColor(iconColor);
+
         userInfoRepository.save(user);
     }
-
 }
 

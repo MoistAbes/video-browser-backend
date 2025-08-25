@@ -1,12 +1,15 @@
 package dev.zymion.video.browser.app.config;
 
+import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
 import dev.zymion.video.browser.app.exceptions.RoleNotFoundException;
+import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
 import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
 import dev.zymion.video.browser.app.models.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -37,6 +40,19 @@ public class GlobalExceptionHandler {
         ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
+
+    @ExceptionHandler(ShowNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleShowNotFound(ShowNotFoundException ex) {
+        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(GenreNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleGenreNotFound(GenreNotFoundException ex) {
+        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
 
 }
 

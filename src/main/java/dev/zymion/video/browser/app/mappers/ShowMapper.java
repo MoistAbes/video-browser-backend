@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 public class ShowMapper {
 
     private final SeasonMapper seasonMapper;
-    private final ContentMapper contentMapper;
+    private final MediaItemMapper mediaItemMapper;
 
-    public ShowMapper(SeasonMapper seasonMapper, ContentMapper contentMapper) {
+    public ShowMapper(SeasonMapper seasonMapper, MediaItemMapper mediaItemMapper) {
         this.seasonMapper = seasonMapper;
-        this.contentMapper = contentMapper;
+        this.mediaItemMapper = mediaItemMapper;
     }
 
 
@@ -27,7 +27,7 @@ public class ShowMapper {
               showEntity.getName(),
               showEntity.getRootPath(),
               seasonMapper.mapToDtoList(showEntity.getSeasons()),
-              contentMapper.mapToDtoList(showEntity.getMovies()),
+              mediaItemMapper.mapToDtoList(showEntity.getMovies()),
               showEntity.getStructure() != null ? showEntity.getStructure().getName() : null,
               showEntity.getGenres().stream()
                       .map(GenreEntity::getName)

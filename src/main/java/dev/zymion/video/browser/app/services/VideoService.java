@@ -1,12 +1,10 @@
 package dev.zymion.video.browser.app.services;
 
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
-import dev.zymion.video.browser.app.models.entities.show.ContentEntity;
 import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 import dev.zymion.video.browser.app.models.entities.show.ShowStructureEntity;
-import dev.zymion.video.browser.app.repositories.show.ContentRepository;
 import dev.zymion.video.browser.app.repositories.show.MediaItemRepository;
 import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
@@ -41,17 +39,15 @@ public class VideoService {
     private final VideoScannerService videoScannerService;
     private final ShowService showService;
     private final MediaItemRepository mediaItemRepository;
-    private final ContentRepository contentRepository;
     private final ShowRepository showRepository;
     private final ShowStructureRepository showStructureRepository;
 
     @Autowired
-    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ContentRepository contentRepository, ShowRepository showRepository, ShowStructureRepository showStructureRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ShowRepository showRepository, ShowStructureRepository showStructureRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.showService = showService;
         this.mediaItemRepository = mediaItemRepository;
-        this.contentRepository = contentRepository;
         this.videoFolder = appPathProperties.getVideoFolder();
         this.showRepository = showRepository;
         this.showStructureRepository = showStructureRepository;
@@ -204,14 +200,16 @@ public class VideoService {
                 })
                 .toList();
 
-        System.out.println("To delete: ");
-        for (MediaItemEntity deleted: toDelete) {
-            System.out.println(deleted.getFileName() + " id: " + deleted.getId());
-            Optional<ContentEntity> contentEntityToDelete = contentRepository.findByMediaItemId(deleted.getId());
+        mediaItemRepository.deleteAll(toDelete);
 
-            contentEntityToDelete.ifPresent(contentRepository::delete);
-            log.info("Removed " + toDelete.size() + " entries not found on disk");
-        }
+//        System.out.println("To delete: ");
+//        for (MediaItemEntity deleted: toDelete) {
+//            System.out.println(deleted.getFileName() + " id: " + deleted.getId());
+//            Optional<ContentEntity> contentEntityToDelete = contentRepository.findByMediaItemId(deleted.getId());
+//
+//            contentEntityToDelete.ifPresent(contentRepository::delete);
+//            log.info("Removed " + toDelete.size() + " entries not found on disk");
+//        }
     }
 
     private String computeMetadataHash(Path path) {

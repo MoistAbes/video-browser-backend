@@ -22,6 +22,16 @@ public enum StructureTypeEnum {
         }
     }
 
+
+    public static StructureTypeEnum safeValueOf(String value) {
+        try {
+            return StructureTypeEnum.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return UNKNOWN;
+        }
+    }
+
+
     @Override
     public String toString() {
         return switch (this) {

@@ -20,9 +20,13 @@ public class SeasonEntity {
 
     private int number;
 
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "season_id") // kolumna w ContentEntity
+//    private List<ContentEntity> episodes = new ArrayList<>();
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "season_id") // kolumna w ContentEntity
-    private List<ContentEntity> episodes = new ArrayList<>();
+    @JoinColumn(name = "season_id") // kolumna w MediaItemEntity
+    private List<MediaItemEntity> episodes = new ArrayList<>();
 
     @Override
     public String toString() {

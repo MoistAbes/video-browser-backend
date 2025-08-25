@@ -1,30 +1,37 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.enums.StructureTypeEnum;
+import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
+import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
 import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.exceptions.ShowMappingException;
 import dev.zymion.video.browser.app.mappers.ShowMapper;
-import dev.zymion.video.browser.app.models.entities.show.ContentEntity;
+import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import dev.zymion.video.browser.app.models.entities.show.SeasonEntity;
 import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
+import dev.zymion.video.browser.app.repositories.show.GenreRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ShowService {
 
     private final ShowRepository showRepository;
     private final ShowMapper showMapper;
+    private final GenreRepository genreRepository;
 
     @Autowired
-    public ShowService(ShowRepository showRepository, ShowMapper showMapper) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository) {
         this.showRepository = showRepository;
         this.showMapper = showMapper;
+        this.genreRepository = genreRepository;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
@@ -34,14 +41,16 @@ public class ShowService {
 
     public void setUpShows(List<MediaItemEntity> mediaItemEntities) {
 
-
+        //znajdujemy wszystkie show
         List<ShowEntity> shows = showRepository.findAll();
+
+        //zdobywamy liste nazw (będą unikalne)
         List<String> showNames = shows.stream()
                 .map(ShowEntity::getName)
                 .toList();
 
 
-        // Grupowanie po parentTitle
+        //tworzymy mape key = showname, value lista media items tego show
         Map<String, List<MediaItemEntity>> mediaItemEntityMap = new HashMap<>();
         for (MediaItemEntity mediaItemEntity : mediaItemEntities) {
             String parentTitle = mediaItemEntity.getParentTitle();
@@ -53,11 +62,12 @@ public class ShowService {
         //Tutaj bedziemy dodawac encje do zapisu/edycji
         List<ShowEntity> showEntityList = new ArrayList<>();
 
+        //przechodzimy po mapie
         for (Map.Entry<String, List<MediaItemEntity>> entry : mediaItemEntityMap.entrySet()) {
             String showName = entry.getKey();
 
+            //jesli mapa zawiera nazwe ktora wczesniej pobralismy z bazy to znaczy ze show juz istnieje i trzeba je aktualizowac
             if (showNames.contains(showName)) {
-
                 showEntityList.add(handleShowUpdate(shows, showNames, showName, entry));
                 continue;
             }
@@ -85,8 +95,6 @@ public class ShowService {
                     showEntity.setRootPath(fullPath);
                 }
 
-
-
                 if (mediaItemEntity.getType() == MediaTypeEnum.EPISODE) {
                     try {
 
@@ -98,13 +106,9 @@ public class ShowService {
                                 .episodes(new ArrayList<>())
                                 .build());
 
-                        ContentEntity contentEntity = ContentEntity.builder()
-                                .type(MediaTypeEnum.EPISODE)
-                                .mediaItem(mediaItemEntity)
-                                .build();
 
                         // Utwórz odcinek i przypisz do sezonu
-                        seasonEntity.getEpisodes().add(contentEntity);
+                        seasonEntity.getEpisodes().add(mediaItemEntity);
 
                     }catch (Exception e){
                         throw new ShowMappingException(
@@ -113,14 +117,7 @@ public class ShowService {
                     }
 
                 }else {
-
-                    ContentEntity contentEntity = ContentEntity.builder()
-                            .mediaItem(mediaItemEntity)
-                            .type(MediaTypeEnum.MOVIE)
-                            .build();
-
-
-                    showEntity.getMovies().add(contentEntity);
+                    showEntity.getMovies().add(mediaItemEntity);
                 }
             }
 
@@ -141,10 +138,7 @@ public class ShowService {
 
         for (MediaItemEntity mediaItemEntity : entry.getValue()) {
             if (mediaItemEntity.getType() == MediaTypeEnum.MOVIE) {
-                showToEdit.getMovies().add(ContentEntity.builder()
-                        .type(MediaTypeEnum.MOVIE)
-                        .mediaItem(mediaItemEntity)
-                        .build());
+                showToEdit.getMovies().add(mediaItemEntity);
             }else if (mediaItemEntity.getType() == MediaTypeEnum.EPISODE) {
 
 
@@ -165,19 +159,13 @@ public class ShowService {
                     });
 
                     // dodajemy odcinek do istniejącego lub nowo utworzonego sezonu
-                    seasonEntity.getEpisodes().add(ContentEntity.builder()
-                            .mediaItem(mediaItemEntity)
-                            .type(MediaTypeEnum.EPISODE)
-                            .build());
+                    seasonEntity.getEpisodes().add(mediaItemEntity);
                 });
 
             }
         }
 
         return showToEdit;
-
-//        showEntityList.add(showToEdit);
-
 
     }
 
@@ -193,7 +181,7 @@ public class ShowService {
         // sortujemy odcinki w każdym sezonie po numerze odcinka w MediaItemEntity
         for (SeasonEntity seasonEntity : showEntity.getSeasons()) {
             seasonEntity.getEpisodes().sort(Comparator.comparingInt(
-                    episode -> episode.getMediaItem().getEpisodeNumber().orElse(0) // jeśli null, traktujemy jako 0
+                    episode -> episode.getEpisodeNumber().orElse(0) // jeśli null, traktujemy jako 0
             ));
         }
 
@@ -210,5 +198,39 @@ public class ShowService {
                 .stream()
                 .map(showMapper::mapToDto)
                 .toList();
+    }
+
+    public List<ShowDto> findRandomByStructure(StructureTypeEnum showStructureType) {
+
+        List<ShowEntity> shows = showRepository.findRandomShowsByStructure(showStructureType, 10);
+
+        return showMapper.mapToDtoList(shows);
+    }
+
+    @Transactional
+    public void addGenreToShow(Long showId, Long genreId) {
+
+        ShowEntity show = showRepository.findById(showId)
+                .orElseThrow(() -> new ShowNotFoundException(String.valueOf(showId)));
+
+        GenreEntity genre = genreRepository.findById(genreId)
+                .orElseThrow(() -> new GenreNotFoundException(String.valueOf(genreId)));
+
+
+        show.getGenres().add(genre);
+        showRepository.save(show); // nie zawsze konieczne, ale bezpieczne bo transactional nad metoda
+    }
+
+    @Transactional
+    public void removeGenreFromShow(Long showId, Long genreId) {
+
+        ShowEntity show = showRepository.findById(showId)
+                .orElseThrow(() -> new ShowNotFoundException(String.valueOf(showId)));
+
+        show.setGenres(show.getGenres().stream()
+                .filter(genre -> !genre.getId().equals(genreId))
+                .collect(Collectors.toSet()));
+
+        showRepository.save(show);
     }
 }

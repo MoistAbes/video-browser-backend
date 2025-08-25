@@ -24,10 +24,7 @@ public class UserInfoController {
     @GetMapping("/userInfo")
     public ResponseEntity<UserInfoDto> getUserInfo() {
         Long userId = securityUtilService.getCurrentUserId();
-
         UserInfoDto user = userInfoService.findById(userId);
-
-        System.out.println("current user: " + user);
 
         return ResponseEntity.ok(user);
     }
@@ -35,8 +32,6 @@ public class UserInfoController {
 
     @GetMapping("/friends")
     public ResponseEntity<List<UserInfoWithStatusDto>> findAllFriends() {
-//        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        Long userId = userDetails.getId();
         Long userId = securityUtilService.getCurrentUserId();
 
         List<UserInfoWithStatusDto> friends = userInfoService.findAllFriends(userId);
@@ -44,21 +39,14 @@ public class UserInfoController {
         return ResponseEntity.ok(friends);
     }
 
-    @PutMapping("/update/icon/color")
-    public ResponseEntity<Void> updateIconColor(@RequestParam String iconColor) {
-        Long userId = securityUtilService.getCurrentUserId();
-        userInfoService.updateIconColor(userId, iconColor);
-        return ResponseEntity.noContent().build();
-    }
 
     @PutMapping("/update/icon/{iconId}")
-    public ResponseEntity<Void> updateIconStyle(@PathVariable Long iconId) {
+    public ResponseEntity<Void> updateIcon(@PathVariable Long iconId, @RequestParam String iconColor) {
         Long userId = securityUtilService.getCurrentUserId();
-
-        userInfoService.updateUserIcon(userId ,iconId);
-
+        userInfoService.updateUserIconAndColor(userId, iconId, iconColor);
         return ResponseEntity.noContent().build();
     }
+
 
 
 }
