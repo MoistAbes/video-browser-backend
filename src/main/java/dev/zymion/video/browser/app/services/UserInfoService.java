@@ -52,6 +52,7 @@ public class UserInfoService {
                 .username(authRequestDto.username())
                 .password(passwordEncoder.encode(authRequestDto.password()))
                 .status(UserStatusEntity.builder().build())
+                .iconColor("#f1c27d")
                 .icon(defaultIcon)
                 .roles(Set.of(userRole))
                 .build();
@@ -93,6 +94,10 @@ public class UserInfoService {
         user.setIconColor(iconColor);
 
         userInfoRepository.save(user);
+    }
+
+    public void updateUserOnlineStatus(Long userId, boolean isOnline) {
+        userInfoRepository.updateOnline(userId, isOnline);
     }
 }
 

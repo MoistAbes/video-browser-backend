@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/videos/subtitles/**").permitAll()
                         .requestMatchers("/stream/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
@@ -99,6 +100,7 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers("/stream/**");
     }
+
 
 
 }
