@@ -70,12 +70,4 @@ public class VideoController {
         }
     }
 
-        //ToDO to moze kiedys bede uzywal
-//    @GetMapping("/thumbnails")
-//    public ResponseEntity<List<String>> findAllVideoInfoThumbnails(@RequestParam String rootFolderPath) {
-//
-//        List<String> result = videoService.getAllThumbnails(rootFolderPath);
-//        return ResponseEntity.ok(result);
-//    }
-
 }

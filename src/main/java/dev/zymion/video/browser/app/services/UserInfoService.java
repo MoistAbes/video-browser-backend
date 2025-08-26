@@ -85,7 +85,7 @@ public class UserInfoService {
     @Transactional
     public void updateUserIconAndColor(Long userId, Long iconId, String iconColor) {
         UserInfoEntity user = userInfoRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " not found"));
 
         UserIconEntity icon = userIconRepository.findById(iconId)
                 .orElseThrow(() -> new RuntimeException("Icon not found"));

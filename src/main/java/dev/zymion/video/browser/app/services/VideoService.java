@@ -33,8 +33,6 @@ import java.util.stream.Collectors;
 public class VideoService {
 
     private final Path videoFolder;
-
-
     private final AppPathProperties appPathProperties;
     private final VideoScannerService videoScannerService;
     private final ShowService showService;
@@ -201,15 +199,6 @@ public class VideoService {
                 .toList();
 
         mediaItemRepository.deleteAll(toDelete);
-
-//        System.out.println("To delete: ");
-//        for (MediaItemEntity deleted: toDelete) {
-//            System.out.println(deleted.getFileName() + " id: " + deleted.getId());
-//            Optional<ContentEntity> contentEntityToDelete = contentRepository.findByMediaItemId(deleted.getId());
-//
-//            contentEntityToDelete.ifPresent(contentRepository::delete);
-//            log.info("Removed " + toDelete.size() + " entries not found on disk");
-//        }
     }
 
     private String computeMetadataHash(Path path) {
@@ -238,28 +227,6 @@ public class VideoService {
 
         showRepository.saveAll(allShows);
     }
-
-
-    //ToDO to moze kiedy bede uzywal
-//    public List<String> getAllThumbnails(String rootFolderPath) {
-//        List<String> thumbnails = new ArrayList<>();
-//
-//        // Załóżmy, że masz pole baseVideoFolder ustawione gdzieś wcześniej
-//        Path thumbnailsDir = Paths.get(String.valueOf(videoFolder), rootFolderPath, "thumbnails");
-//
-//        if (Files.exists(thumbnailsDir) && Files.isDirectory(thumbnailsDir)) {
-//            try (Stream<Path> paths = Files.list(thumbnailsDir)) {
-//                thumbnails = paths
-//                        .filter(Files::isRegularFile)
-//                        .map(path -> path.getFileName().toString()) // tylko nazwy plików
-//                        .collect(Collectors.toList());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        return thumbnails;
-//    }
 
     public Resource getImageResource(String relativePath) throws FileNotFoundException, MalformedURLException {
         Path fullPath = videoFolder.resolve(relativePath).normalize();

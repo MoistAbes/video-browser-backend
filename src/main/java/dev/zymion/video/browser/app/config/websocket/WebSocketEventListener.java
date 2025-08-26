@@ -1,6 +1,5 @@
 package dev.zymion.video.browser.app.config.websocket;
 
-
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.CustomUserDetails;
 import dev.zymion.video.browser.app.services.security.SecurityUtilService;
@@ -23,14 +22,12 @@ public class WebSocketEventListener {
         this.userInfoService = userInfoService;
     }
 
-
     @EventListener
     public void handleConnect(SessionConnectEvent event) {
         // oznacz użytkownika jako online
         Long userId = securityUtilService.getCurrentUserId();
         log.info("user id: {} Connected to websocket: {} | " ,userId ,event);
         userInfoService.updateUserOnlineStatus(userId, true);
-
     }
 
     @EventListener
