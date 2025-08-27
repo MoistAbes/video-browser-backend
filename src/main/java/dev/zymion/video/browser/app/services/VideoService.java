@@ -1,15 +1,21 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
+import dev.zymion.video.browser.app.api.services.MovieMetadataApiService;
+import dev.zymion.video.browser.app.enums.GenreEnum;
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
+import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
 import dev.zymion.video.browser.app.models.entities.show.ShowStructureEntity;
+import dev.zymion.video.browser.app.repositories.show.GenreRepository;
 import dev.zymion.video.browser.app.repositories.show.MediaItemRepository;
 import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowStructureRepository;
 import dev.zymion.video.browser.app.services.helper.FFprobeHelper;
+import dev.zymion.video.browser.app.services.util.StringUtilService;
 import dev.zymion.video.browser.app.services.util.VideoScannerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +45,12 @@ public class VideoService {
     private final MediaItemRepository mediaItemRepository;
     private final ShowRepository showRepository;
     private final ShowStructureRepository showStructureRepository;
+    private final MovieMetadataApiService movieMetadataApiService;
+    private final StringUtilService stringUtilService;
+    private final GenreRepository genreRepository;
 
     @Autowired
-    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ShowRepository showRepository, ShowStructureRepository showStructureRepository) {
+    public VideoService(AppPathProperties appPathProperties, VideoScannerService videoScannerService, ShowService showService, MediaItemRepository mediaItemRepository, ShowRepository showRepository, ShowStructureRepository showStructureRepository, MovieMetadataApiService movieMetadataApiService, StringUtilService stringUtilService, GenreRepository genreRepository) {
         this.appPathProperties = appPathProperties;
         this.videoScannerService = videoScannerService;
         this.showService = showService;
@@ -49,6 +58,9 @@ public class VideoService {
         this.videoFolder = appPathProperties.getVideoFolder();
         this.showRepository = showRepository;
         this.showStructureRepository = showStructureRepository;
+        this.movieMetadataApiService = movieMetadataApiService;
+        this.stringUtilService = stringUtilService;
+        this.genreRepository = genreRepository;
     }
 
     //ToDO
@@ -63,20 +75,12 @@ public class VideoService {
     //ffmpeg -i "Demon slayer - Infinity train.mp4" -t 00:30:00 -vf "fps=1/600" -qscale:v 2 thumbnails/thumb_%03d.jpg
 
     public void scanAllVideos() {
-        //kasujemy poprzednie
-//        showRepository.deleteAll();
-
         List<Path> files = videoScannerService.findAllVideoFiles(videoFolder);
 
         // 1️⃣ Zbieramy wszystkie aktualne relativePath-y
         Set<String> currentRelativePaths = files.stream()
                 .map(path -> videoFolder.relativize(path).toString().replace("\\", "/"))
                 .collect(Collectors.toSet());
-
-        System.out.println("Current relative paths: ");
-        for (String path : currentRelativePaths) {
-            System.out.println(path);
-        }
 
         // 2️⃣ Przetwarzamy nowe/zmienione pliki
         List<MediaItemEntity> mediaItems = files.stream()
@@ -85,18 +89,69 @@ public class VideoService {
                 .toList();
 
 
-
         //tutaj beda tylko te ktore sie zmienily lub nowe
         List<MediaItemEntity> savedMediaItems = mediaItemRepository.saveAll(mediaItems);
 
         // 3️⃣ Usuwamy z bazy te, których już nie ma na dysku
         removeMissingFiles(currentRelativePaths);
 
-        showService.setUpShows(savedMediaItems);
+        List<ShowEntity> savedShows = showService.setUpShows(savedMediaItems);
 
 
         //ustawianie struktur shows
         setUpShowsStructureType();
+
+        //fetch api tmdb data
+        fetchMetadataForShows(savedShows);
+
+    }
+
+
+    private void fetchMetadataForShows(List<ShowEntity> shows) {
+
+        List<GenreEntity> genres = genreRepository.findAll();
+
+        for (ShowEntity show : shows) {
+
+            //wyciagamy czysty tytuł
+            String rawTitle = show.getName();
+            String cleanTitle = stringUtilService.extractCleanTitle(rawTitle);
+            //wyciagamy potencjalny rok produkcji
+            Optional<Integer> yearOpt = stringUtilService.extractYearFromTitle(rawTitle);
+
+            boolean isMovie = false;
+
+            //decydujemy czy jest to film czy nie (potrzebne do fetch api tmdb inne endpointy)
+            StructureTypeEnum structure = show.getStructure().getName();
+            if (structure == StructureTypeEnum.SINGLE_MOVIE || structure == StructureTypeEnum.MOVIE_COLLECTION) {
+                isMovie = true;
+            }
+
+
+            Optional<MovieMetadataDto> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie);
+
+            //jesli znajdzie dane
+            if (showMetadata.isPresent()) {
+
+                //trzeba znalesc z genres z bazy pasujacy do showMetadata
+
+
+                Set<GenreEntity> matchedGenres = new HashSet<>();
+
+                for (String genreName : showMetadata.get().getGenreNames()) {
+                    genres.stream()
+                            .filter(genreEntity -> GenreEnum.fromTmdbName(genreName) == genreEntity.getName())
+                            .forEach(matchedGenres::add);
+                }
+
+                if (!matchedGenres.isEmpty()) {
+                    show.setGenres(matchedGenres);
+                }
+
+            }
+        }
+        showRepository.saveAll(shows);
+
     }
 
 

@@ -17,6 +17,26 @@ public enum GenreEnum {
     CARTOON,
     UNKNOWN;
 
+
+    public static GenreEnum fromTmdbName(String tmdbGenreName) {
+        return switch (tmdbGenreName.toLowerCase()) {
+            case "horror" -> HORROR;
+            case "comedy" -> COMEDY;
+            case "action" -> ACTION;
+            case "adventure" -> ADVENTURE;
+            case "mystery" -> MYSTERY;
+            case "documentary" -> DOCUMENTARY;
+            case "drama" -> DRAMA;
+            case "fantasy" -> FANTASY;
+            case "science fiction", "sci-fi" -> SCI_FI;
+            case "romance" -> ROMANCE;
+            case "thriller" -> THRILLER;
+            case "animation", "anime", "cartoon" -> ANIME; // lub rozdzielić
+            default -> UNKNOWN;
+        };
+    }
+
+
     @Override
     public String toString() {
         return switch (this) {

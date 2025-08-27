@@ -39,7 +39,7 @@ public class ShowService {
     }
 
 
-    public void setUpShows(List<MediaItemEntity> mediaItemEntities) {
+    public List<ShowEntity> setUpShows(List<MediaItemEntity> mediaItemEntities) {
 
         //znajdujemy wszystkie show
         List<ShowEntity> shows = showRepository.findAll();
@@ -129,7 +129,7 @@ public class ShowService {
         }
 
         // Tutaj możesz zapisać wszystkie show do bazy
-        showRepository.saveAll(showEntityList);
+       return showRepository.saveAll(showEntityList);
     }
 
     private ShowEntity handleShowUpdate(List<ShowEntity> shows, List<String> showNames, String showName, Map.Entry<String, List<MediaItemEntity>> entry) {
