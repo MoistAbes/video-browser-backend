@@ -18,8 +18,11 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
     ShowEntity findByParentTitle(@Param("parentTitle") String parentTitle);
 
 
-    @Query("SELECT s.id AS id, s.name AS name, s.rootPath AS rootPath FROM ShowEntity s")
-    List<ShowRootPathProjection> findAllShowsWithRootPath();
+//    @Query("SELECT s.id AS id, s.name AS name, s.rootPath AS rootPath FROM ShowEntity s")
+//    List<ShowRootPathProjection> findAllShowsWithRootPath();
+
+    List<ShowRootPathProjection> findAllBy();
+
 
     @Query(value = "SELECT * FROM shows ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
     List<ShowEntity> findRandomShows(@Param("limit") int limit);

@@ -1,6 +1,5 @@
 package dev.zymion.video.browser.app.api.services;
 
-
 import dev.zymion.video.browser.app.models.dto.show.GenreDto;
 import dev.zymion.video.browser.app.models.dto.show.GenreListWrapper;
 import jakarta.annotation.PostConstruct;
@@ -14,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 
 @Component
 public class GenreCache {

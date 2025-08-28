@@ -35,7 +35,7 @@ public class ShowService {
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
-        return showRepository.findAllShowsWithRootPath();
+        return showRepository.findAllBy();
     }
 
 

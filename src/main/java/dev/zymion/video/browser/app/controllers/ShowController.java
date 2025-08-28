@@ -26,14 +26,12 @@ public class ShowController {
     public ResponseEntity<List<ShowDto>> findAllShows() {
         List<ShowDto> result = showService.findAll();
         return ResponseEntity.ok(result);
-
     }
 
     @GetMapping("find/random")
     public ResponseEntity<List<ShowDto>> findRandomShows() {
         List<ShowDto> result = showService.findRandom();
         return ResponseEntity.ok(result);
-
     }
 
     @GetMapping("find/random/{showStructure}")
@@ -54,6 +52,7 @@ public class ShowController {
      * Okrojona lista tylko do nazwy sciezki root i id i nazwy
      * @return
      */
+    //ToDO to do testu jest po zmianie projekcji
     @GetMapping("find/with-root-path")
     public List<ShowRootPathProjection> getShowsWithRootPath() {
         return showService.findAllShowsWithRootPath();
@@ -73,5 +72,7 @@ public class ShowController {
         showService.removeGenreFromShow(showId, genreId);
         return ResponseEntity.ok().build();
     }
+
+
 
 }

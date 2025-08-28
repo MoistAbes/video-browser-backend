@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/videos/image").permitAll()
                         .requestMatchers("/videos/subtitles/**").permitAll()
-                        .requestMatchers("/stream/**").permitAll()
+//                        .requestMatchers("/stream/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()

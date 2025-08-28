@@ -12,5 +12,5 @@ public record ShowDto (
     List<SeasonDto> seasons,
     List<MediaItemDto> movies,
     StructureTypeEnum structure,
-    Set<GenreEnum> genres
+    Set<GenreDto> genres
 ) {}

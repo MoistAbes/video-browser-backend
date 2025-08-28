@@ -13,10 +13,12 @@ public class ShowMapper {
 
     private final SeasonMapper seasonMapper;
     private final MediaItemMapper mediaItemMapper;
+    private final GenreMapper genreMapper;
 
-    public ShowMapper(SeasonMapper seasonMapper, MediaItemMapper mediaItemMapper) {
+    public ShowMapper(SeasonMapper seasonMapper, MediaItemMapper mediaItemMapper, GenreMapper genreMapper) {
         this.seasonMapper = seasonMapper;
         this.mediaItemMapper = mediaItemMapper;
+        this.genreMapper = genreMapper;
     }
 
 
@@ -29,9 +31,10 @@ public class ShowMapper {
               seasonMapper.mapToDtoList(showEntity.getSeasons()),
               mediaItemMapper.mapToDtoList(showEntity.getMovies()),
               showEntity.getStructure() != null ? showEntity.getStructure().getName() : null,
-              showEntity.getGenres().stream()
-                      .map(GenreEntity::getName)
-                      .collect(Collectors.toSet())
+              genreMapper.mapToDtoSet(showEntity.getGenres())
+//              showEntity.getGenres().stream()
+//                      .map(GenreEntity::getName)
+//                      .collect(Collectors.toSet())
         );
 
     }
