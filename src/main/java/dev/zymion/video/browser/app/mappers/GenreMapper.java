@@ -14,7 +14,7 @@ public class GenreMapper {
     public GenreDto mapToDto(GenreEntity genreEntity) {
         return new GenreDto(
                 genreEntity.getId(),
-                genreEntity.getName()
+                genreEntity.getName().name()
         );
     }
 

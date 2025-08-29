@@ -19,7 +19,7 @@ public class TmdbMovieResult {
     private String overview;
 
     @JsonProperty("genre_ids")
-    private List<Integer> genreIds;
+    private List<Long> genreIds;
 
 
     public String getResolvedTitle(boolean isMovie) {

@@ -111,6 +111,7 @@ public class VideoService {
 
         List<GenreEntity> genres = genreRepository.findAll();
 
+
         for (ShowEntity show : shows) {
 
             //wyciagamy czysty tytuł
@@ -128,27 +129,10 @@ public class VideoService {
             }
 
 
-            Optional<MovieMetadataDto> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie);
+            Optional<MovieMetadataDto> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
 
             //jesli znajdzie dane
-            if (showMetadata.isPresent()) {
-
-                //trzeba znalesc z genres z bazy pasujacy do showMetadata
-
-
-                Set<GenreEntity> matchedGenres = new HashSet<>();
-
-                for (String genreName : showMetadata.get().getGenreNames()) {
-                    genres.stream()
-                            .filter(genreEntity -> GenreEnum.fromTmdbName(genreName) == genreEntity.getName())
-                            .forEach(matchedGenres::add);
-                }
-
-                if (!matchedGenres.isEmpty()) {
-                    show.setGenres(matchedGenres);
-                }
-
-            }
+            showMetadata.ifPresent(movieMetadataDto -> show.setGenres(movieMetadataDto.getGenres()));
         }
         showRepository.saveAll(shows);
 

@@ -3,6 +3,8 @@ package dev.zymion.video.browser.app.api.services;
 import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
 import dev.zymion.video.browser.app.api.models.TmdbMovieResult;
 import dev.zymion.video.browser.app.api.models.TmdbSearchResponse;
+import dev.zymion.video.browser.app.enums.GenreEnum;
+import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -13,23 +15,23 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class MovieMetadataApiService {
 
     private final RestTemplate restTemplate;
-    private final GenreCache genreCache;
     @Value("${tmdb.api.key}")
     private String apiKey;
 
-    public MovieMetadataApiService(RestTemplateBuilder builder, GenreCache genreCache) {
+    public MovieMetadataApiService(RestTemplateBuilder builder) {
         this.restTemplate = builder.build();
-        this.genreCache = genreCache;
     }
 
 
-    public Optional<MovieMetadataDto> fetchMetadata(String title, Optional<Integer> year, boolean isMovie) {
+    public Optional<MovieMetadataDto> fetchMetadata(String title, Optional<Integer> year, boolean isMovie, List<GenreEntity> genres) {
 
         log.info("Fetching movie metadata for title: {} and year: {}", title, year.isPresent() ? year.get() : "not found");
 
@@ -56,9 +58,13 @@ public class MovieMetadataApiService {
             TmdbMovieResult result = response.getBody().getResults().getFirst();
 
             String resolvedTitle = result.getResolvedTitle(isMovie);
-            List<String> genreNames = genreCache.getGenreNames(result.getGenreIds());
 
-            MovieMetadataDto movieMetadataDto = new MovieMetadataDto(resolvedTitle, result.getOverview(), genreNames);
+            Set<GenreEntity> matchingGenres = genres.stream()
+                    .filter(genreEntity -> result.getGenreIds().contains(genreEntity.getId()))
+                    .collect(Collectors.toSet());
+
+
+            MovieMetadataDto movieMetadataDto = new MovieMetadataDto(resolvedTitle, result.getOverview(), matchingGenres);
 
             log.info("Movie metadata: {}", movieMetadataDto);
 

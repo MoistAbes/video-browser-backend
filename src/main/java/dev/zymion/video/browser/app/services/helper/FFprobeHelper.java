@@ -95,54 +95,6 @@ public class FFprobeHelper {
     }
 
 
-
-//    public static void streamWithAudioConversion(Path filePath, double startSeconds, HttpServletResponse response) throws IOException {
-//        response.setHeader("Cache-Control", "no-cache");
-//        response.setHeader("Connection", "keep-alive");
-//        response.setContentType("video/mp4");
-//
-//        List<String> command = List.of(
-//                "ffmpeg",
-//                "-ss", String.valueOf(startSeconds),
-//                "-i", filePath.toString(),
-//                "-c:v", "copy",
-//                "-c:a", "aac",
-//                "-b:a", "192k",
-//                "-movflags", "frag_keyframe+empty_moov",
-//                "-f", "mp4",
-//                "pipe:1"
-//        );
-//
-//        ProcessBuilder pb = new ProcessBuilder(command);
-//        Process process = pb.start();
-//
-//        // logi ffmpeg (stderr) w osobnym wątku
-//        new Thread(() -> {
-//            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-//                String line;
-//                while ((line = reader.readLine()) != null) {
-//                    System.out.println("[FFMPEG] " + line);
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }).start();
-//
-//        // wysyłanie danych do klienta (stdout)
-//        try (OutputStream out = response.getOutputStream();
-//             InputStream in = process.getInputStream()) {
-//            byte[] buffer = new byte[8192];
-//            int len;
-//            while ((len = in.read(buffer)) != -1) {
-//                out.write(buffer, 0, len);
-//            }
-//            out.flush();
-//        } finally {
-//            process.destroy();
-//        }
-//    }
-
-
     public static void streamWithAudioConversion(Path filePath, double startSeconds, HttpServletResponse response) throws IOException {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");

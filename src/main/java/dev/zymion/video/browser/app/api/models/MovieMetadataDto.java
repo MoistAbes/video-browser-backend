@@ -1,8 +1,10 @@
 package dev.zymion.video.browser.app.api.models;
 
+import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -15,6 +17,6 @@ public class MovieMetadataDto {
 
     private String title;
     private String overview;
-    List<String> genreNames;
+    Set<GenreEntity> genres;
 
 }

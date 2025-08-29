@@ -4,6 +4,7 @@ import dev.zymion.video.browser.app.models.dto.show.GenreDto;
 import dev.zymion.video.browser.app.services.GenreService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
@@ -27,5 +28,13 @@ public class GenreController {
     public ResponseEntity<List<String>> findAllGenreNames() {
         return ResponseEntity.ok(genreService.findAllGenresNames());
     }
+
+
+    @PostMapping("/update")
+    public ResponseEntity<Void> updateGenres() {
+        genreService.updateGenresFromTmdb();
+        return ResponseEntity.ok().build();
+    }
+
 
 }
