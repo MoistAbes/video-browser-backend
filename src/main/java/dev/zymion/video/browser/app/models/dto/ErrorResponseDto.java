@@ -2,6 +2,7 @@ package dev.zymion.video.browser.app.models.dto;
 
 
 public record ErrorResponseDto (
-        String message
+        String message,
+        String errorMessage
 ) {}
 

@@ -165,7 +165,7 @@ public class VideoService {
         if (seasonMatcher.find() && epMatcher.find()) {
             season = Integer.parseInt(seasonMatcher.group(1));
             episode = Integer.parseInt(epMatcher.group(1));
-            mediaTypeEnum = MediaTypeEnum.EPISODE;
+            mediaTypeEnum = MediaTypeEnum.TV;
         }
 
 //        System.out.println(title + " | " + relativePath + " | " + parentTitle + " | " + season + " | " + episode);

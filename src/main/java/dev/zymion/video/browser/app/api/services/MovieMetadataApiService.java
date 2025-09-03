@@ -1,21 +1,21 @@
 package dev.zymion.video.browser.app.api.services;
 
-import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
-import dev.zymion.video.browser.app.api.models.TmdbMovieResult;
-import dev.zymion.video.browser.app.api.models.TmdbSearchResponse;
+import dev.zymion.video.browser.app.api.models.*;
 import dev.zymion.video.browser.app.enums.GenreEnum;
+import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -73,6 +73,45 @@ public class MovieMetadataApiService {
 
         log.info("No movie metadata found");
         return Optional.empty();
+    }
+
+
+    public List<TmdbGenreModel> fetchAllGenres() {
+
+
+        List<TmdbGenreModel> genreList = new ArrayList<>();
+
+        String movieGenresUrl = "https://api.themoviedb.org/3/genre/movie/list?api_key=" + apiKey + "&language=en-EN";
+        String tvGenresUrl = "https://api.themoviedb.org/3/genre/tv/list?api_key=" + apiKey + "&language=en-EN";
+
+
+        ResponseEntity<TmdbGenreResponse> movieResponse = restTemplate.getForEntity(movieGenresUrl, TmdbGenreResponse.class);
+        ResponseEntity<TmdbGenreResponse> tvResponse = restTemplate.getForEntity(tvGenresUrl, TmdbGenreResponse.class);
+
+        if (movieResponse.getStatusCode() == HttpStatus.OK && movieResponse.getBody() != null) {
+
+            for (TmdbGenreModel genre : movieResponse.getBody().getGenres()) {
+                genre.setMediaType(MediaTypeEnum.MOVIE);
+                genreList.add(genre);
+            }
+        }
+
+        if (tvResponse.getStatusCode() == HttpStatus.OK && tvResponse.getBody() != null) {
+
+            for (TmdbGenreModel genre : tvResponse.getBody().getGenres()) {
+                genre.setMediaType(MediaTypeEnum.TV);
+                genreList.add(genre);
+            }
+
+        }
+
+
+        for (TmdbGenreModel genre : genreList) {
+            System.out.println(genre);
+        }
+
+        return genreList;
+
     }
 
 

@@ -84,8 +84,10 @@ public class SecurityConfig {
                 "http://192.168.108.13:4200",
                 "http://172.23.240.1:4200",
                 "http://192.168.15.13:4200",
+                "http://172.16.101.16:4200",
                 "http://localhost:8080",
-                "http://192.168.15.13:8080"
+                "http://192.168.15.13:8080",
+                "http://172.16.101.16:8080"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

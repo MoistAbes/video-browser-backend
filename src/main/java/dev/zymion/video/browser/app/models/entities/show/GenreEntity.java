@@ -1,6 +1,7 @@
 package dev.zymion.video.browser.app.models.entities.show;
 
 import dev.zymion.video.browser.app.enums.GenreEnum;
+import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,7 +19,11 @@ public class GenreEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING) // <--- to jest kluczowe
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private GenreEnum name;
+
+
+    @Enumerated(EnumType.STRING)
+    private MediaTypeEnum mediaType;
 
 }

@@ -1,39 +1,33 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.api.models.TmdbGenreModel;
+import dev.zymion.video.browser.app.api.services.MovieMetadataApiService;
 import dev.zymion.video.browser.app.enums.GenreEnum;
+import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.mappers.GenreMapper;
 import dev.zymion.video.browser.app.models.dto.show.GenreDto;
-import dev.zymion.video.browser.app.models.dto.show.GenreListWrapper;
 import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import dev.zymion.video.browser.app.repositories.show.GenreRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Service
 public class GenreService {
 
-
-    private final RestTemplate restTemplate;
     private final GenreRepository genreRepository;
     private final GenreMapper genreMapper;
+    private final MovieMetadataApiService movieMetadataApiService;
 
-    @Value("${tmdb.api.key}")
-    private String apiKey;
-
-
-    public GenreService(RestTemplateBuilder restTemplateBuilder, GenreRepository genreRepository, GenreMapper genreMapper) {
-        this.restTemplate = restTemplateBuilder.build();
+    public GenreService(GenreRepository genreRepository, GenreMapper genreMapper, MovieMetadataApiService movieMetadataApiService) {
         this.genreRepository = genreRepository;
         this.genreMapper = genreMapper;
+        this.movieMetadataApiService = movieMetadataApiService;
     }
-
 
     public List<String> findAllGenresNames() {
         return genreRepository.findAllGenreNames();
@@ -44,27 +38,24 @@ public class GenreService {
     }
 
 
-    public void updateGenresFromTmdb() {
-        updateGenresFromEndpoint("https://api.themoviedb.org/3/genre/movie/list");
-        updateGenresFromEndpoint("https://api.themoviedb.org/3/genre/tv/list");
-    }
+    public void updateGenresFromTmdbApi() {
 
-    private void updateGenresFromEndpoint(String endpoint) {
-        String url = String.format("%s?api_key=%s", endpoint, apiKey);
-        ResponseEntity<GenreListWrapper> response = restTemplate.getForEntity(url, GenreListWrapper.class);
+        genreRepository.deleteAll();
 
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            for (GenreDto genre : response.getBody().genres()) {
-                genreRepository.findById(genre.id())
-                        .ifPresentOrElse(
-                                existing -> {
-                                    existing.setName(GenreEnum.fromTmdbName(genre.name()));
-                                    genreRepository.save(existing);
-                                },
-                                () -> genreRepository.save(new GenreEntity(genre.id(), GenreEnum.fromTmdbName(genre.name())))
-                        );
-            }
+        List<TmdbGenreModel> genres = movieMetadataApiService.fetchAllGenres();
+
+        List<GenreEntity> newGenreList = new ArrayList<>();
+
+
+        for (TmdbGenreModel genre : genres) {
+             newGenreList.add(GenreEntity.builder()
+                             .id(genre.getId())
+                             .name(GenreEnum.fromTmdbName(genre.getName()))
+                             .mediaType(genre.getMediaType())
+                     .build());
         }
+        genreRepository.saveAll(newGenreList);
+
     }
 
 

@@ -95,7 +95,7 @@ public class ShowService {
                     showEntity.setRootPath(fullPath);
                 }
 
-                if (mediaItemEntity.getType() == MediaTypeEnum.EPISODE) {
+                if (mediaItemEntity.getType() == MediaTypeEnum.TV) {
                     try {
 
                         int seasonNumber = mediaItemEntity.getSeasonNumber().get();
@@ -139,7 +139,7 @@ public class ShowService {
         for (MediaItemEntity mediaItemEntity : entry.getValue()) {
             if (mediaItemEntity.getType() == MediaTypeEnum.MOVIE) {
                 showToEdit.getMovies().add(mediaItemEntity);
-            }else if (mediaItemEntity.getType() == MediaTypeEnum.EPISODE) {
+            }else if (mediaItemEntity.getType() == MediaTypeEnum.TV) {
 
 
                 mediaItemEntity.getSeasonNumber().ifPresent(seasonNumber -> {

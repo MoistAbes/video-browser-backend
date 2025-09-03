@@ -32,7 +32,9 @@ public class GenreController {
 
     @PostMapping("/update")
     public ResponseEntity<Void> updateGenres() {
-        genreService.updateGenresFromTmdb();
+
+        genreService.updateGenresFromTmdbApi();
+
         return ResponseEntity.ok().build();
     }
 

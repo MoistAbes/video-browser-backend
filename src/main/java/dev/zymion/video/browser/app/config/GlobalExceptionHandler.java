@@ -17,38 +17,37 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDto> handleAuthException(AuthenticationException ex) {
-        ErrorResponseDto error = new ErrorResponseDto("Niepoprawne dane uwierzytelniające");
+        ErrorResponseDto error = new ErrorResponseDto("Niepoprawne dane uwierzytelniające", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleUserNotFound(UsernameNotFoundException ex) {
-        ErrorResponseDto error = new ErrorResponseDto("Użytkownik nie istnieje");
+        ErrorResponseDto error = new ErrorResponseDto("Użytkownik nie istnieje", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponseDto> handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto("User already exists", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleRoleNotFoundException(RoleNotFoundException ex) {
-        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto("Role not found", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(ShowNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleShowNotFound(ShowNotFoundException ex) {
-        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto("Show not found", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(GenreNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleGenreNotFound(GenreNotFoundException ex) {
-        ErrorResponseDto error = new ErrorResponseDto(ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto("Genre not found" ,ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
