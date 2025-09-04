@@ -3,7 +3,6 @@ package dev.zymion.video.browser.app.api.models;
 import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import lombok.*;
 
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -12,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 @ToString
-public class MovieMetadataDto {
+public class TmdbMovieMetadata {
 
 
     private String title;

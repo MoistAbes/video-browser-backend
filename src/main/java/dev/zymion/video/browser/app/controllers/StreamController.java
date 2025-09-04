@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Path;
 
-@CrossOrigin(origins = "http://localhost:4200")  // dopasuj do swojego frontu
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/stream")
 @Slf4j
@@ -73,6 +73,14 @@ public class StreamController {
             }
         });
     }
+
+    @GetMapping("/normal/preview")
+    public void streamPreview(@RequestParam("path") String relativePath,
+                              HttpServletResponse response) {
+
+        streamService.getStreamPreview(relativePath, response);
+    }
+
 
 
 }

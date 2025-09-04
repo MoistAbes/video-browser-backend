@@ -4,6 +4,7 @@ import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,6 +12,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.*;
 
 @Service
+@Slf4j
 public class StreamService {
 
     private final Path videoFolder;
@@ -134,4 +136,68 @@ public class StreamService {
         }
     }
 
+    public void getStreamPreview(String relativePath, HttpServletResponse response) {
+
+
+
+        Path filePath = videoFolder.resolve(relativePath).normalize();
+
+        if (!filePath.startsWith(videoFolder) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        long fileLength;
+        try {
+            fileLength = Files.size(filePath);
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
+        }
+
+        String contentType;
+        try {
+            contentType = Files.probeContentType(filePath);
+        } catch (IOException e) {
+            log.warn("Nie udało się wykryć typu MIME dla pliku: {}", filePath.getFileName(), e);
+            contentType = "video/mp4"; // domyślny fallback
+        }
+
+
+        response.setContentType(contentType);
+        response.setHeader("Content-Disposition", "inline; filename=\"" + filePath.getFileName().toString() + "\"");
+        response.setHeader("Accept-Ranges", "none"); // brak wsparcia dla Range
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        // Szacunkowy bitrate – np. 1 MB/s (można dopracować)
+        long estimatedBitrate = 1024 * 1024; // 1 MB/s
+        long previewLength = 90 * estimatedBitrate;
+        long end = Math.min(previewLength, fileLength);
+
+        response.setHeader("Content-Length", String.valueOf(end));
+
+        try (FileChannel in = FileChannel.open(filePath, StandardOpenOption.READ);
+             ServletOutputStream out = response.getOutputStream()) {
+
+            ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024); // 1 MB
+            long remaining = end;
+
+            while (remaining > 0) {
+                int toRead = (int) Math.min(buffer.capacity(), remaining);
+                buffer.clear().limit(toRead);
+
+                int read = in.read(buffer);
+                if (read == -1) break;
+
+                out.write(buffer.array(), 0, read);
+                remaining -= read;
+            }
+            out.flush();
+        } catch (IOException e) {
+            log.error("Błąd podczas streamowania preview", e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+
+
+    }
 }

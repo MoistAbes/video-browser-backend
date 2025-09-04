@@ -3,10 +3,9 @@ package dev.zymion.video.browser.app.controllers;
 import dev.zymion.video.browser.app.models.dto.show.GenreDto;
 import dev.zymion.video.browser.app.services.GenreService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -20,9 +19,15 @@ public class GenreController {
     }
 
     @GetMapping("/find/all")
-    public ResponseEntity<List<GenreDto>> findAllGenres() {
-        return ResponseEntity.ok(genreService.findAllGenres());
+    public ResponseEntity<List<GenreDto>> findAllGenres(@RequestParam(required = false) Boolean shuffle) {
+        List<GenreDto> genres = genreService.findAllGenres();
+        if (Boolean.TRUE.equals(shuffle)) {
+            Collections.shuffle(genres);
+        }
+        return ResponseEntity.ok(genres);
     }
+
+
 
     @GetMapping("/find/all/names")
     public ResponseEntity<List<String>> findAllGenreNames() {

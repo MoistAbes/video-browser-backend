@@ -1,5 +1,6 @@
 package dev.zymion.video.browser.app.controllers;
 
+import dev.zymion.video.browser.app.enums.GenreEnum;
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
 import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/show")
@@ -34,11 +36,21 @@ public class ShowController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("find/random/{showStructure}")
-    public ResponseEntity<List<ShowDto>> findRandomShowsByStructure(@PathVariable String showStructure) {
-        StructureTypeEnum type = StructureTypeEnum.safeValueOf(showStructure);
-        List<ShowDto> randomShows = showService.findRandomByStructure(type);
+
+    //ToDO to moze zostac tak bo beda to pierwsze 10 ktore i tak bede wyswietlane
+    @GetMapping("find/random/structure/{showStructureId}")
+    public ResponseEntity<List<ShowDto>> findRandomShowsByStructure(@PathVariable Long showStructureId) {
+        List<ShowDto> randomShows = showService.findRandomByStructure(showStructureId);
         return ResponseEntity.ok(randomShows);
+    }
+
+
+
+    @GetMapping("/find/random/allGenres")
+    public ResponseEntity<Map<GenreEnum, List<ShowDto>>> findRandomShowsByStructureAndGroupedByGenre(@RequestParam(required = false) StructureTypeEnum structureType) {
+
+        Map<GenreEnum, List<ShowDto>> result = showService.findRandomByStructureAndGroupedByGenre(structureType);
+        return ResponseEntity.ok(result);
     }
 
 

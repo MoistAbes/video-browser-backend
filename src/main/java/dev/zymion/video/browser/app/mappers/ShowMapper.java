@@ -32,9 +32,6 @@ public class ShowMapper {
               mediaItemMapper.mapToDtoList(showEntity.getMovies()),
               showEntity.getStructure() != null ? showEntity.getStructure().getName() : null,
               genreMapper.mapToDtoSet(showEntity.getGenres())
-//              showEntity.getGenres().stream()
-//                      .map(GenreEntity::getName)
-//                      .collect(Collectors.toSet())
         );
 
     }

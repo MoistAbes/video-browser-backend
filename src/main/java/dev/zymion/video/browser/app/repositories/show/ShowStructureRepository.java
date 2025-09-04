@@ -16,4 +16,6 @@ public interface ShowStructureRepository extends JpaRepository<ShowStructureEnti
     @Query("SELECT s FROM ShowStructureEntity s WHERE s.name = :name")
     Optional<ShowStructureEntity> findByName(@Param("name") StructureTypeEnum name);
 
+    @Query("SELECT s.id FROM ShowStructureEntity s WHERE s.name = :name")
+    Long findIdByName(@Param("name") StructureTypeEnum name);
 }

@@ -1,14 +1,11 @@
 package dev.zymion.video.browser.app.api.services;
 
 import dev.zymion.video.browser.app.api.models.*;
-import dev.zymion.video.browser.app.enums.GenreEnum;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,7 +28,7 @@ public class MovieMetadataApiService {
     }
 
 
-    public Optional<MovieMetadataDto> fetchMetadata(String title, Optional<Integer> year, boolean isMovie, List<GenreEntity> genres) {
+    public Optional<TmdbMovieMetadata> fetchMetadata(String title, Optional<Integer> year, boolean isMovie, List<GenreEntity> genres) {
 
         log.info("Fetching movie metadata for title: {} and year: {}", title, year.isPresent() ? year.get() : "not found");
 
@@ -64,11 +61,11 @@ public class MovieMetadataApiService {
                     .collect(Collectors.toSet());
 
 
-            MovieMetadataDto movieMetadataDto = new MovieMetadataDto(resolvedTitle, result.getOverview(), matchingGenres);
+            TmdbMovieMetadata tmdbMovieMetadata = new TmdbMovieMetadata(resolvedTitle, result.getOverview(), matchingGenres);
 
-            log.info("Movie metadata: {}", movieMetadataDto);
+            log.info("Movie metadata: {}", tmdbMovieMetadata);
 
-            return Optional.of(movieMetadataDto);
+            return Optional.of(tmdbMovieMetadata);
         }
 
         log.info("No movie metadata found");

@@ -1,7 +1,8 @@
 package dev.zymion.video.browser.app.services;
 
-import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
+import dev.zymion.video.browser.app.api.models.TmdbMovieMetadata;
 import dev.zymion.video.browser.app.api.services.MovieMetadataApiService;
+import dev.zymion.video.browser.app.enums.GenreEnum;
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
 import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
 import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
@@ -30,15 +31,17 @@ public class ShowService {
     private final ShowStructureRepository showStructureRepository;
     private final StringUtilService stringUtilService;
     private final MovieMetadataApiService movieMetadataApiService;
+    private final ShowStructureService showStructureService;
 
     @Autowired
-    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService, ShowStructureService showStructureService) {
         this.showRepository = showRepository;
         this.showMapper = showMapper;
         this.genreRepository = genreRepository;
         this.showStructureRepository = showStructureRepository;
         this.stringUtilService = stringUtilService;
         this.movieMetadataApiService = movieMetadataApiService;
+        this.showStructureService = showStructureService;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
@@ -207,9 +210,9 @@ public class ShowService {
                 .toList();
     }
 
-    public List<ShowDto> findRandomByStructure(StructureTypeEnum showStructureType) {
+    public List<ShowDto> findRandomByStructure(Long showStructureTypeId) {
 
-        List<ShowEntity> shows = showRepository.findRandomShowsByStructure(showStructureType, 10);
+        List<ShowEntity> shows = showRepository.findRandomShowsByStructure(showStructureTypeId, 10);
 
         return showMapper.mapToDtoList(shows);
     }
@@ -278,12 +281,42 @@ public class ShowService {
             }
 
 
-            Optional<MovieMetadataDto> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
+            Optional<TmdbMovieMetadata> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
 
             //jesli znajdzie dane
-            showMetadata.ifPresent(movieMetadataDto -> show.setGenres(movieMetadataDto.getGenres()));
+            showMetadata.ifPresent(tmdbMovieMetadata -> show.setGenres(tmdbMovieMetadata.getGenres()));
         }
         showRepository.saveAll(shows);
 
+    }
+
+    public Map<GenreEnum, List<ShowDto>> findRandomByStructureAndGroupedByGenre(StructureTypeEnum structureType) {
+
+        Long structureTypeId = showStructureService.findIdByName(structureType);
+
+        Map<GenreEnum, List<ShowDto>> resultMap = new HashMap<>();
+        List<GenreEntity> shuffledGenres = genreRepository.findAll();
+
+        for (GenreEntity genre : shuffledGenres) {
+            resultMap.computeIfAbsent(genre.getName(), k -> new ArrayList<>());
+        }
+
+        Collections.shuffle(shuffledGenres);
+
+        if (structureTypeId != null) {
+            for (GenreEntity genre : shuffledGenres) {
+                List<ShowEntity> shows = showRepository.findRandomShowsByStructureTypeAndGenre(structureTypeId, genre.getId(), 10);
+                resultMap.put(genre.getName(), showMapper.mapToDtoList(shows));
+            }
+        }else {
+            for (GenreEntity genre : shuffledGenres) {
+
+                List<ShowEntity> shows = showRepository.findRandomShowsByGenre(genre.getId(), 10);
+                resultMap.put(genre.getName(), showMapper.mapToDtoList(shows));
+
+            }
+        }
+
+        return resultMap;
     }
 }
