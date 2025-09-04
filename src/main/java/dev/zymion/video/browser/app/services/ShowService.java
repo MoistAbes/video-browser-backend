@@ -1,5 +1,7 @@
 package dev.zymion.video.browser.app.services;
 
+import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
+import dev.zymion.video.browser.app.api.services.MovieMetadataApiService;
 import dev.zymion.video.browser.app.enums.StructureTypeEnum;
 import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
 import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
@@ -7,13 +9,12 @@ import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
 import dev.zymion.video.browser.app.exceptions.ShowMappingException;
 import dev.zymion.video.browser.app.mappers.ShowMapper;
-import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
-import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
-import dev.zymion.video.browser.app.models.entities.show.SeasonEntity;
-import dev.zymion.video.browser.app.models.entities.show.ShowEntity;
+import dev.zymion.video.browser.app.models.entities.show.*;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
 import dev.zymion.video.browser.app.repositories.show.GenreRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
+import dev.zymion.video.browser.app.repositories.show.ShowStructureRepository;
+import dev.zymion.video.browser.app.services.util.StringUtilService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,12 +27,18 @@ public class ShowService {
     private final ShowRepository showRepository;
     private final ShowMapper showMapper;
     private final GenreRepository genreRepository;
+    private final ShowStructureRepository showStructureRepository;
+    private final StringUtilService stringUtilService;
+    private final MovieMetadataApiService movieMetadataApiService;
 
     @Autowired
-    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService) {
         this.showRepository = showRepository;
         this.showMapper = showMapper;
         this.genreRepository = genreRepository;
+        this.showStructureRepository = showStructureRepository;
+        this.stringUtilService = stringUtilService;
+        this.movieMetadataApiService = movieMetadataApiService;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
@@ -232,5 +239,51 @@ public class ShowService {
                 .collect(Collectors.toSet()));
 
         showRepository.save(show);
+    }
+
+    public void setUpShowsStructureType() {
+        List<ShowEntity> allShows = showRepository.findAll();
+
+        for (ShowEntity show : allShows) {
+            StructureTypeEnum type = StructureTypeEnum.fromShow(show);
+
+            ShowStructureEntity structure = showStructureRepository.findByName(type)
+                    .orElseThrow(() -> new IllegalStateException("Brak zdefiniowanej struktury: " + type));
+
+            show.setStructure(structure);
+        }
+
+        showRepository.saveAll(allShows);
+    }
+
+    public void syncShowMetadataWithTmdb(List<ShowEntity> shows) {
+
+        List<GenreEntity> genres = genreRepository.findAll();
+
+
+        for (ShowEntity show : shows) {
+
+            //wyciagamy czysty tytuł
+            String rawTitle = show.getName();
+            String cleanTitle = stringUtilService.extractCleanTitle(rawTitle);
+            //wyciagamy potencjalny rok produkcji
+            Optional<Integer> yearOpt = stringUtilService.extractYearFromTitle(rawTitle);
+
+            boolean isMovie = false;
+
+            //decydujemy czy jest to film czy nie (potrzebne do fetch api tmdb inne endpointy)
+            StructureTypeEnum structure = show.getStructure().getName();
+            if (structure == StructureTypeEnum.SINGLE_MOVIE || structure == StructureTypeEnum.MOVIE_COLLECTION) {
+                isMovie = true;
+            }
+
+
+            Optional<MovieMetadataDto> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
+
+            //jesli znajdzie dane
+            showMetadata.ifPresent(movieMetadataDto -> show.setGenres(movieMetadataDto.getGenres()));
+        }
+        showRepository.saveAll(shows);
+
     }
 }
