@@ -34,6 +34,8 @@ public class VideoService {
     //ToDO
     //skrypt to konwersji napisow srt na vtt
 //    ffmpeg -sub_charenc windows-1250 -i napisy.srt napisy.vtt
+//    ffmpeg -sub_charenc UTF-8 -i napisy.srt napisy.vtt --->>> to mi dobrze polskie napisy przerobilo
+
 
     //ToDO skrypt do zmiany formatu audio na obslugiwany
 //    ffmpeg -i input.mkv -c:v copy -c:a aac -b:a 192k output.mkv

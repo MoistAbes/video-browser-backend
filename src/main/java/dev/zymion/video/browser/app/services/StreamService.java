@@ -138,8 +138,6 @@ public class StreamService {
 
     public void getStreamPreview(String relativePath, HttpServletResponse response) {
 
-
-
         Path filePath = videoFolder.resolve(relativePath).normalize();
 
         if (!filePath.startsWith(videoFolder) || !Files.isRegularFile(filePath, LinkOption.NOFOLLOW_LINKS)) {
@@ -179,7 +177,7 @@ public class StreamService {
         try (FileChannel in = FileChannel.open(filePath, StandardOpenOption.READ);
              ServletOutputStream out = response.getOutputStream()) {
 
-            ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024); // 1 MB
+            ByteBuffer buffer = ByteBuffer.allocate(1024 * 1024);
             long remaining = end;
 
             while (remaining > 0) {
@@ -193,10 +191,20 @@ public class StreamService {
                 remaining -= read;
             }
             out.flush();
+
         } catch (IOException e) {
-            log.error("Błąd podczas streamowania preview", e);
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            String message = e.getMessage();
+            // Typowe przypadki "normalnego" przerwania połączenia
+            if (message != null && (
+                    message.contains("Broken pipe") ||
+                            message.contains("Connection reset") ||
+                            message.contains("SocketTimeout"))) {
+                log.debug("Połączenie zakończone przez klienta podczas streamingu: {}", filePath.getFileName());
+            } else {
+                log.error("Błąd podczas streamowania preview", e);
+            }
         }
+
 
 
     }

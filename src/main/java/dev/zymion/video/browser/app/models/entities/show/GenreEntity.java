@@ -16,14 +16,17 @@ public class GenreEntity {
 
     //tutaj bez generation type identity bo chcemy miec te same id co w tmdb api zeby mozna mylo pozniej dobrze matchowac
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true)
+    private Long tmdbMovieGenreId;
+
+    @Column(unique = true)
+    private Long tmdbTvGenreId;
 
     @Enumerated(EnumType.STRING) // <--- to jest kluczowe
     @Column(nullable = false)
     private GenreEnum name;
-
-
-    @Enumerated(EnumType.STRING)
-    private MediaTypeEnum mediaType;
 
 }

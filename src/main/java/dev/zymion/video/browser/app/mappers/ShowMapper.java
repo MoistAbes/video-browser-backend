@@ -28,6 +28,7 @@ public class ShowMapper {
               showEntity.getId(),
               showEntity.getName(),
               showEntity.getRootPath(),
+              showEntity.getDescription(),
               seasonMapper.mapToDtoList(showEntity.getSeasons()),
               mediaItemMapper.mapToDtoList(showEntity.getMovies()),
               showEntity.getStructure() != null ? showEntity.getStructure().getName() : null,

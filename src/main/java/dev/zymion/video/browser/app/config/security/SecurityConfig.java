@@ -26,10 +26,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final StreamAuthFilter streamAuthFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService, StreamAuthFilter streamAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
+        this.streamAuthFilter = streamAuthFilter;
     }
 
     @Bean
@@ -45,21 +47,23 @@ public class SecurityConfig {
                                 "/assets/**",        // Angular assets
                                 "/media/**",         // fonty, ikony
                                 "/static/**",        // standardowa ścieżka dla static w Spring Boot
-                                "/*.js", "/*.css",   // bundlowane pliki Angulara
-                                "/login", // ścieżki routingu SPA
-                                "/home" // ścieżki routingu SPA
+                                "/*.js", "/*.css"   // bundlowane pliki Angulara
                         ).permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/videos/image").permitAll()
-                        .requestMatchers("/videos/subtitles/**").permitAll()
-//                        .requestMatchers("/stream/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/login").permitAll() // ścieżki routingu SPA
+                        .requestMatchers("/home").permitAll() // ścieżki routingu SPA
+                        .requestMatchers("/auth/**").permitAll() //logowanie, rejestracja
+                        .requestMatchers("/videos/image").permitAll() //obrazki
+                        .requestMatchers("/videos/subtitles/**").permitAll() //napisy
+                        .requestMatchers("/error").permitAll() //bledy
+                        .requestMatchers("/ws/**").permitAll() // websocket
+                        .requestMatchers("/stream/**").permitAll() //weryfikujemy wlasnym filtrem
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(new CorsFilter(corsConfigurationSource), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Nasz StreamAuthFilter
+                .addFilterBefore(streamAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -79,15 +83,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:4200",
-                "http://192.168.155.13:8080",
-                "http://192.168.155.13:4200",
-                "http://192.168.108.13:4200",
-                "http://172.23.240.1:4200",
-                "http://192.168.15.13:4200",
-                "http://172.16.101.16:4200",
+                "http://10.52.198.80:4200",
                 "http://localhost:8080",
-                "http://192.168.15.13:8080",
-                "http://172.16.101.16:8080"
+                "http://10.52.198.80:8080"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -98,10 +96,10 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/stream/**");
-    }
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring().requestMatchers("/stream/**");
+//    }
 
 
 

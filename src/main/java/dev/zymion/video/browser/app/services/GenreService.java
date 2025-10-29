@@ -13,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,20 +41,40 @@ public class GenreService {
 
     public void updateGenresFromTmdbApi() {
 
-        genreRepository.deleteAll();
+//        genreRepository.deleteAll();
 
         List<TmdbGenreModel> genres = movieMetadataApiService.fetchAllGenres();
 
-        List<GenreEntity> newGenreList = new ArrayList<>();
-
+        Map<GenreEnum, GenreEntity> genreMap = new HashMap<>();
 
         for (TmdbGenreModel genre : genres) {
-             newGenreList.add(GenreEntity.builder()
-                             .id(genre.getId())
-                             .name(GenreEnum.fromTmdbName(genre.getName()))
-                             .mediaType(genre.getMediaType())
-                     .build());
+            GenreEnum genreName = GenreEnum.fromTmdbName(genre.getName());
+            GenreEntity existing = genreMap.get(genreName);
+
+            if (existing == null) {
+                // Tworzymy nowy wpis jeśli jeszcze nie istnieje
+                GenreEntity.GenreEntityBuilder builder = GenreEntity.builder()
+                        .name(genreName);
+
+                if (genre.getMediaType().equals(MediaTypeEnum.MOVIE)) {
+                    builder.tmdbMovieGenreId(genre.getId());
+                } else if (genre.getMediaType().equals(MediaTypeEnum.TV)) {
+                    builder.tmdbTvGenreId(genre.getId());
+                }
+
+                genreMap.put(genreName, builder.build());
+            } else {
+                // Uzupełniamy istniejący wpis, jeśli brakowało ID
+                if (genre.getMediaType().equals(MediaTypeEnum.MOVIE)) {
+                    existing.setTmdbMovieGenreId(genre.getId());
+                } else if (genre.getMediaType().equals(MediaTypeEnum.TV)) {
+                    existing.setTmdbTvGenreId(genre.getId());
+                }
+            }
         }
+
+        List<GenreEntity> newGenreList = new ArrayList<>(genreMap.values());
+
         genreRepository.saveAll(newGenreList);
 
     }

@@ -20,6 +20,4 @@ public class ShowStructureEntity {
     @Enumerated(EnumType.STRING) // <--- to jest kluczowe
     @Column(nullable = false, unique = true)
     private StructureTypeEnum name;
-
-
 }

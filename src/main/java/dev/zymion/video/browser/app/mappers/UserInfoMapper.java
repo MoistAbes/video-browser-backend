@@ -22,7 +22,11 @@ public class UserInfoMapper {
                 userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getIconColor(),
-                userIconMapper.mapToDto(userInfo.getIcon())
+                userIconMapper.mapToDto(userInfo.getIcon()),
+                userInfo.getRoles().stream()
+                        .map(roleEntity -> roleEntity.getName().name())
+                        .toList(),
+                userInfo.getRegistrationDate()
         );
     }
 

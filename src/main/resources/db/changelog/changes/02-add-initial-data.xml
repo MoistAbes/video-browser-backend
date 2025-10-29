@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Dodanie bazowych ról -->
+    <changeSet id="1" author="system">
+        <insert tableName="roles">
+            <column name="name" value="USER"/>
+        </insert>
+        <insert tableName="roles">
+            <column name="name" value="ADMIN"/>
+        </insert>
+    </changeSet>
+
+    <!-- 2️⃣ Wstawienie domyślnej ikony -->
+    <changeSet id="2" author="system">
+        <insert tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-smile"/>
+        </insert>
+    </changeSet>
+
+    <!-- 2️⃣ initial data for show_structures -->
+    <changeSet id="3" author="system" context="init-data">
+        <insert tableName="show_structures">
+            <column name="name" value="SINGLE_MOVIE"/>
+        </insert>
+        <insert tableName="show_structures">
+            <column name="name" value="MOVIE_COLLECTION"/>
+        </insert>
+        <insert tableName="show_structures">
+            <column name="name" value="SEASONAL_SERIES"/>
+        </insert>
+        <insert tableName="show_structures">
+            <column name="name" value="HYBRID"/>
+        </insert>
+        <insert tableName="show_structures">
+            <column name="name" value="UNKNOWN"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -24,7 +24,6 @@ public class MediaItemEntity {
     private Integer seasonNumber;
     private Integer episodeNumber;
 
-    //ToDO to samo pole mamy w mediaItem wiec musi zostac albo tu albo w media item duplikacja jest nipotrzebna
     @Enumerated(EnumType.STRING)
     private MediaTypeEnum type; // MOVIE / EPISODE
 

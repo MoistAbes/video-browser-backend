@@ -32,6 +32,16 @@ public enum StructureTypeEnum {
     }
 
 
+    public String getEnumValueToString() {
+        return switch (this) {
+            case SINGLE_MOVIE -> "SINGLE_MOVIE";
+            case MOVIE_COLLECTION -> "MOVIE_COLLECTION";
+            case SEASONAL_SERIES -> "SEASONAL_SERIES";
+            case HYBRID -> "HYBRID";
+            default -> "UNKNOWN";
+        };
+    }
+
     @Override
     public String toString() {
         return switch (this) {

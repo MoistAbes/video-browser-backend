@@ -29,6 +29,12 @@ public class UserInfoController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/")
+    public ResponseEntity<List<UserInfoDto>> findAllUsers() {
+        List<UserInfoDto> mappedUsers = userInfoService.findAllUsers();
+
+        return ResponseEntity.ok(mappedUsers);
+    }
 
     @GetMapping("/friends")
     public ResponseEntity<List<UserInfoWithStatusDto>> findAllFriends() {

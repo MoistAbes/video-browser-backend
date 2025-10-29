@@ -18,6 +18,8 @@ import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -51,10 +53,12 @@ public class UserInfoService {
         UserInfoEntity userInfoEntity = UserInfoEntity.builder()
                 .username(authRequestDto.username())
                 .password(passwordEncoder.encode(authRequestDto.password()))
+                .registrationDate(LocalDate.now())
                 .status(UserStatusEntity.builder().build())
                 .iconColor("#f1c27d")
                 .icon(defaultIcon)
                 .roles(Set.of(userRole))
+                .active(true)
                 .build();
 
         userInfoRepository.save(userInfoEntity);
@@ -98,6 +102,10 @@ public class UserInfoService {
 
     public void updateUserOnlineStatus(Long userId, boolean isOnline) {
         userInfoRepository.updateOnline(userId, isOnline);
+    }
+
+    public List<UserInfoDto> findAllUsers() {
+        return userInfoMapper.mapToDtoList(userInfoRepository.findAll());
     }
 }
 

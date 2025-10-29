@@ -18,7 +18,7 @@ public class RoleEntity {
 
 
     @Enumerated(EnumType.STRING)
-    private RoleEnum name; // e.g., "ROLE_USER", "ROLE_ADMIN"
+    private RoleEnum name;
 
 
     @Override

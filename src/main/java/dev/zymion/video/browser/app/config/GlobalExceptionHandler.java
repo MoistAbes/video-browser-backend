@@ -1,9 +1,6 @@
 package dev.zymion.video.browser.app.config;
 
-import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
-import dev.zymion.video.browser.app.exceptions.RoleNotFoundException;
-import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
-import dev.zymion.video.browser.app.exceptions.UserAlreadyExistsException;
+import dev.zymion.video.browser.app.exceptions.*;
 import dev.zymion.video.browser.app.models.dto.ErrorResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +46,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleGenreNotFound(GenreNotFoundException ex) {
         ErrorResponseDto error = new ErrorResponseDto("Genre not found" ,ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(UserDisabledException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserDisabled(UserDisabledException ex) {
+        ErrorResponseDto error = new ErrorResponseDto("Konto użytkownika jest nieaktywne", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
 

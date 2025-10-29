@@ -16,6 +16,7 @@ import dev.zymion.video.browser.app.repositories.show.GenreRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowStructureRepository;
 import dev.zymion.video.browser.app.services.util.StringUtilService;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,10 @@ public class ShowService {
     private final StringUtilService stringUtilService;
     private final MovieMetadataApiService movieMetadataApiService;
     private final ShowStructureService showStructureService;
+    private final EntityManager entityManager;
 
     @Autowired
-    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService, ShowStructureService showStructureService) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService, ShowStructureService showStructureService, EntityManager entityManager) {
         this.showRepository = showRepository;
         this.showMapper = showMapper;
         this.genreRepository = genreRepository;
@@ -42,6 +44,7 @@ public class ShowService {
         this.stringUtilService = stringUtilService;
         this.movieMetadataApiService = movieMetadataApiService;
         this.showStructureService = showStructureService;
+        this.entityManager = entityManager;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
@@ -210,9 +213,9 @@ public class ShowService {
                 .toList();
     }
 
-    public List<ShowDto> findRandomByStructure(Long showStructureTypeId) {
+    public List<ShowDto> findRandomByStructure(StructureTypeEnum showStructureType) {
 
-        List<ShowEntity> shows = showRepository.findRandomShowsByStructure(showStructureTypeId, 10);
+        List<ShowEntity> shows = showRepository.findRandomShowsByStructure(showStructureType.getEnumValueToString(), 9);
 
         return showMapper.mapToDtoList(shows);
     }
@@ -284,17 +287,20 @@ public class ShowService {
             Optional<TmdbMovieMetadata> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
 
             //jesli znajdzie dane
-            showMetadata.ifPresent(tmdbMovieMetadata -> show.setGenres(tmdbMovieMetadata.getGenres()));
+            showMetadata.ifPresent(tmdbMovieMetadata -> {
+                show.setGenres(tmdbMovieMetadata.getGenres());
+                show.setDescription(tmdbMovieMetadata.getOverview());
+            });
         }
         showRepository.saveAll(shows);
 
     }
 
-    public Map<GenreEnum, List<ShowDto>> findRandomByStructureAndGroupedByGenre(StructureTypeEnum structureType) {
+    public Map<GenreEnum, List<ShowRootPathProjection>> findRandomByStructureAndGroupedByGenre(StructureTypeEnum structureType) {
 
         Long structureTypeId = showStructureService.findIdByName(structureType);
 
-        Map<GenreEnum, List<ShowDto>> resultMap = new HashMap<>();
+        Map<GenreEnum, List<ShowRootPathProjection>> resultMap = new HashMap<>();
         List<GenreEntity> shuffledGenres = genreRepository.findAll();
 
         for (GenreEntity genre : shuffledGenres) {
@@ -305,18 +311,38 @@ public class ShowService {
 
         if (structureTypeId != null) {
             for (GenreEntity genre : shuffledGenres) {
-                List<ShowEntity> shows = showRepository.findRandomShowsByStructureTypeAndGenre(structureTypeId, genre.getId(), 10);
-                resultMap.put(genre.getName(), showMapper.mapToDtoList(shows));
+                List<ShowRootPathProjection> shows =
+                        showRepository.findRandomShowsByStructureTypeAndGenre(structureTypeId, genre.getId(), 9);
+
+                resultMap.put(genre.getName(), shows);
+
             }
-        }else {
+        } else {
             for (GenreEntity genre : shuffledGenres) {
+                List<ShowRootPathProjection> shows =
+                        showRepository.findRandomShowsByGenre(genre.getId(), 9);
 
-                List<ShowEntity> shows = showRepository.findRandomShowsByGenre(genre.getId(), 10);
-                resultMap.put(genre.getName(), showMapper.mapToDtoList(shows));
-
+                resultMap.put(genre.getName(), shows);
             }
         }
 
+
+        //remove from result genres with no results
+        resultMap.entrySet().removeIf(entry ->
+                entry.getValue() == null || entry.getValue().isEmpty()
+        );
+
+
         return resultMap;
+    }
+
+    public void deleteShow(Long showId) {
+        this.showRepository.deleteById(showId);
+    }
+
+    public ShowDto findById(Long showId) throws ShowNotFoundException {
+        ShowEntity show = this.showRepository.findById(showId)
+                .orElseThrow(() -> new ShowNotFoundException("Show not found with id: " + showId));
+        return showMapper.mapToDto(show);
     }
 }

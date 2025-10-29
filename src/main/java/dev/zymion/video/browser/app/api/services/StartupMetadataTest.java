@@ -1,12 +1,12 @@
 //package dev.zymion.video.browser.app.api.services;
 //
-//import dev.zymion.video.browser.app.api.models.MovieMetadataDto;
+//import dev.zymion.video.browser.app.api.models.TmdbMovieMetadata;
 //import dev.zymion.video.browser.app.services.util.StringUtilService;
 //import org.springframework.boot.CommandLineRunner;
 //import org.springframework.stereotype.Component;
 //import java.util.Optional;
-//
-////ToDO dla testow potem do usuniecia
+////
+//////ToDO dla testow potem do usuniecia
 //@Component
 //public class StartupMetadataTest implements CommandLineRunner {
 //
@@ -29,7 +29,7 @@
 //
 //        System.out.println("🔍 Testuję pobieranie metadanych dla: " + rawTitle);
 //
-//        Optional<MovieMetadataDto> metadata = metadataService.fetchMetadata(cleanTitle, yearOpt, true);
+//        Optional<TmdbMovieMetadata> metadata = metadataService.fetchMetadata(cleanTitle, yearOpt, true);
 //
 //        if (metadata.isPresent()) {
 //

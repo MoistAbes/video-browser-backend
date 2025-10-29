@@ -3,6 +3,8 @@ package dev.zymion.video.browser.app.models.entities.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,6 +42,13 @@ public class UserInfoEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<RoleEntity> roles = new HashSet<>();
+
+    @Column(nullable = false)
+    private LocalDate registrationDate;
+
+    @Column(nullable = false)
+    private boolean active = true; // domyślnie użytkownik jest aktywny
+
 
     @Override
     public String toString() {

@@ -57,9 +57,13 @@ public class MovieMetadataApiService {
             String resolvedTitle = result.getResolvedTitle(isMovie);
 
             Set<GenreEntity> matchingGenres = genres.stream()
-                    .filter(genreEntity -> result.getGenreIds().contains(genreEntity.getId()))
+                    .filter(genreEntity -> result.getGenreIds().stream()
+                            .anyMatch(tmdbId ->
+                                    (genreEntity.getTmdbMovieGenreId() != null && genreEntity.getTmdbMovieGenreId().equals(tmdbId)) ||
+                                            (genreEntity.getTmdbTvGenreId() != null && genreEntity.getTmdbTvGenreId().equals(tmdbId))
+                            )
+                    )
                     .collect(Collectors.toSet());
-
 
             TmdbMovieMetadata tmdbMovieMetadata = new TmdbMovieMetadata(resolvedTitle, result.getOverview(), matchingGenres);
 
@@ -75,12 +79,10 @@ public class MovieMetadataApiService {
 
     public List<TmdbGenreModel> fetchAllGenres() {
 
-
         List<TmdbGenreModel> genreList = new ArrayList<>();
 
         String movieGenresUrl = "https://api.themoviedb.org/3/genre/movie/list?api_key=" + apiKey + "&language=en-EN";
         String tvGenresUrl = "https://api.themoviedb.org/3/genre/tv/list?api_key=" + apiKey + "&language=en-EN";
-
 
         ResponseEntity<TmdbGenreResponse> movieResponse = restTemplate.getForEntity(movieGenresUrl, TmdbGenreResponse.class);
         ResponseEntity<TmdbGenreResponse> tvResponse = restTemplate.getForEntity(tvGenresUrl, TmdbGenreResponse.class);
@@ -99,16 +101,11 @@ public class MovieMetadataApiService {
                 genre.setMediaType(MediaTypeEnum.TV);
                 genreList.add(genre);
             }
-
         }
 
-
-        for (TmdbGenreModel genre : genreList) {
-            System.out.println(genre);
-        }
+        //
 
         return genreList;
-
     }
 
 

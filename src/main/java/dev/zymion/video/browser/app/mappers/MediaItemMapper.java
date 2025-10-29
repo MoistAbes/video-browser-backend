@@ -13,6 +13,7 @@ public class MediaItemMapper {
         return new MediaItemDto(
                 entity.getId(),
                 entity.getTitle(),
+                entity.getParentTitle(),
                 entity.getSeasonNumber().orElse(null),
                 entity.getEpisodeNumber().orElse(null),
                 entity.getAudio().orElse(null),
@@ -20,7 +21,8 @@ public class MediaItemMapper {
                 entity.getDuration(),
                 entity.getType().toString(),
                 entity.getFileName(),
-                entity.getRootPath()
+                entity.getRootPath(),
+                entity.getVideoHash()
         );
     }
 

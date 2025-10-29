@@ -1,11 +1,13 @@
 package dev.zymion.video.browser.app.controllers.security;
 
+import dev.zymion.video.browser.app.exceptions.UserDisabledException;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
 import dev.zymion.video.browser.app.models.dto.JwtTokenDto;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
 import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.JwtService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtTokenDto> login(@RequestBody AuthRequestDto request) {
+    public ResponseEntity<JwtTokenDto> login(@Valid @RequestBody AuthRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
@@ -46,12 +48,16 @@ public class AuthController {
         UserInfoEntity user = userInfoRepository.findByUsername(request.username())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        if (!user.isActive()) {
+            throw new UserDisabledException("This account is disabled");
+        }
+
         String jwtToken = jwtService.generateToken(user);
         return ResponseEntity.ok(new JwtTokenDto(jwtToken));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody AuthRequestDto request) {
+    public ResponseEntity<Void> register(@Valid @RequestBody AuthRequestDto request) {
         userInfoService.registerUser(request);
         return ResponseEntity.ok().build();
     }

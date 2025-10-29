@@ -24,6 +24,12 @@ public class ShowController {
         this.showService = showService;
     }
 
+    @GetMapping("find/id/{showId}")
+    public ResponseEntity<ShowDto> findShowById(@PathVariable Long showId) {
+        ShowDto showDto = showService.findById(showId);
+        return ResponseEntity.ok(showDto);
+    }
+
     @GetMapping("find/all")
     public ResponseEntity<List<ShowDto>> findAllShows() {
         List<ShowDto> result = showService.findAll();
@@ -36,20 +42,17 @@ public class ShowController {
         return ResponseEntity.ok(result);
     }
 
-
-    //ToDO to moze zostac tak bo beda to pierwsze 10 ktore i tak bede wyswietlane
-    @GetMapping("find/random/structure/{showStructureId}")
-    public ResponseEntity<List<ShowDto>> findRandomShowsByStructure(@PathVariable Long showStructureId) {
-        List<ShowDto> randomShows = showService.findRandomByStructure(showStructureId);
+    @GetMapping("find/random/structure")
+    public ResponseEntity<List<ShowDto>> findRandomShowsByStructure(@RequestParam(required = false) StructureTypeEnum structureType) {
+        List<ShowDto> randomShows = showService.findRandomByStructure(structureType);
         return ResponseEntity.ok(randomShows);
     }
 
-
-
     @GetMapping("/find/random/allGenres")
-    public ResponseEntity<Map<GenreEnum, List<ShowDto>>> findRandomShowsByStructureAndGroupedByGenre(@RequestParam(required = false) StructureTypeEnum structureType) {
+    public ResponseEntity<Map<GenreEnum, List<ShowRootPathProjection>>> findRandomShowsByStructureAndGroupedByGenre(
+            @RequestParam(required = false) StructureTypeEnum structureType) {
 
-        Map<GenreEnum, List<ShowDto>> result = showService.findRandomByStructureAndGroupedByGenre(structureType);
+        Map<GenreEnum, List<ShowRootPathProjection>> result = showService.findRandomByStructureAndGroupedByGenre(structureType);
         return ResponseEntity.ok(result);
     }
 
@@ -64,7 +67,6 @@ public class ShowController {
      * Okrojona lista tylko do nazwy sciezki root i id i nazwy
      * @return
      */
-    //ToDO to do testu jest po zmianie projekcji
     @GetMapping("find/with-root-path")
     public List<ShowRootPathProjection> getShowsWithRootPath() {
         return showService.findAllShowsWithRootPath();
@@ -85,6 +87,14 @@ public class ShowController {
         return ResponseEntity.ok().build();
     }
 
+
+    @DeleteMapping("/{showId}")
+    public ResponseEntity<Void> deleteShow(@PathVariable Long showId) {
+
+        showService.deleteShow(showId);
+
+        return ResponseEntity.ok().build();
+    }
 
 
 }

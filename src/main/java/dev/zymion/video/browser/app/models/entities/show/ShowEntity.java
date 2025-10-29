@@ -32,6 +32,8 @@ public class ShowEntity {
     @Column(nullable = false, unique = true)
     private String rootPath;
 
+    private String description;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "show_id") // kolumna w SeasonEntity
     private List<SeasonEntity> seasons = new ArrayList<>();

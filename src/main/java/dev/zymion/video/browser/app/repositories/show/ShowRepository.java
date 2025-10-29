@@ -25,12 +25,12 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
     SELECT s.* 
     FROM shows s
     JOIN show_structures ss ON s.show_structure_id = ss.id
-    WHERE ss.id = :structureTypeId
+    WHERE ss.name = :structureType
     ORDER BY RANDOM()
     LIMIT :limit
     """, nativeQuery = true)
     List<ShowEntity> findRandomShowsByStructure(
-            @Param("structureTypeId") Long structureTypeId,
+            @Param("structureType") String structureType,
             @Param("limit") int limit
     );
 
@@ -38,28 +38,31 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
     SELECT s.* 
     FROM shows s
     JOIN shows_genres sg ON s.id = sg.show_id
-    JOIN genres g ON sg.genre_id = g.id
-    WHERE g.id = :genreId
+    WHERE sg.genre_id = :genreId
     ORDER BY RANDOM()
     LIMIT :limit
     """, nativeQuery = true)
-    List<ShowEntity> findRandomShowsByGenre(@Param("genreId") Long genreId, @Param("limit") int limit);
+    List<ShowRootPathProjection> findRandomShowsByGenre(@Param("genreId") Long genreId, @Param("limit") int limit);
+
 
 
     @Query(value = """
-    SELECT s.* 
+    SELECT s.*
     FROM shows s
-    JOIN show_structures ss ON s.show_structure_id = ss.id
-    JOIN shows_genres sg ON s.id = sg.show_id
-    JOIN genres g ON sg.genre_id = g.id
-    WHERE ss.id = :structureTypeId
-      AND g.id = :genreId
+    WHERE s.show_structure_id = :structureTypeId
+      AND s.id IN (
+          SELECT sg.show_id
+          FROM shows_genres sg
+          WHERE sg.genre_id = :genreId
+      )
     ORDER BY RANDOM()
     LIMIT :limit
     """, nativeQuery = true)
-    List<ShowEntity> findRandomShowsByStructureTypeAndGenre(
+    List<ShowRootPathProjection> findRandomShowsByStructureTypeAndGenre(
             @Param("structureTypeId") Long structureTypeId,
             @Param("genreId") Long genreId,
             @Param("limit") int limit
     );
+
+
 }
