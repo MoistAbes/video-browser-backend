@@ -32,13 +32,12 @@ public class StreamAuthFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        System.out.println("STREAM FILTER IS RUNNING");
-
         // filtrujemy tylko endpointy /stream/normal/**
         if (path.startsWith("/stream/normal") || path.startsWith("/stream/convert")) {
             String authKey = request.getParameter("authKey");
 
             if (authKey == null || !streamKeyService.isKeyValid(authKey)) {
+                System.out.println("It is incorrect streamKey: " + authKey);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Unauthorized: invalid or expired stream key.");
                 return; // przerywamy dalsze przetwarzanie requestu

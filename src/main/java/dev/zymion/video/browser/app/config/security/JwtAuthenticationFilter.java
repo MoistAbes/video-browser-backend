@@ -1,6 +1,7 @@
 package dev.zymion.video.browser.app.config.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.zymion.video.browser.app.services.security.CustomUserDetailsService;
 import dev.zymion.video.browser.app.services.security.JwtService;
 import jakarta.servlet.FilterChain;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -44,8 +47,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        username = jwtService.extractUsername(jwt);
+        try {
+            // 👇 tutaj może polecieć ExpiredJwtException
+            username = jwtService.extractUsername(jwt);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            System.out.println("ExpiredJwtException is happening");
+            // Token wygasł — zwracamy 401
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
 
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Token expired");
+            errorResponse.put("message", "Token expired");
+
+            new ObjectMapper().writeValue(response.getWriter(), errorResponse);
+            return; // 🔴 przerwij dalsze przetwarzanie
+        } catch (io.jsonwebtoken.JwtException e) {
+
+            // Token nieprawidłowy (zły podpis, struktura itd.)
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid token\"}");
+            response.getWriter().write("{\"message\": \"Invalid token\"}");
+            response.getWriter().flush();
+            return;
+        }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
