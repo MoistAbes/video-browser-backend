@@ -41,8 +41,8 @@ public class JwtService {
      * Token expiration time in milliseconds.
      * Currently set to 24 hour.
      */
-//    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24h
-    private static final long EXPIRATION_TIME = 1000 * 60; // 1 min
+    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24h
+//    private static final long EXPIRATION_TIME = 1000 * 60; // 1 min
 
     /**
      * Returns the signing key used for JWT token creation and validation.

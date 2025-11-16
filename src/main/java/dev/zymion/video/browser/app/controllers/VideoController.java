@@ -1,5 +1,6 @@
 package dev.zymion.video.browser.app.controllers;
 
+import dev.zymion.video.browser.app.config.adnotations.SkipLogging;
 import dev.zymion.video.browser.app.services.VideoService;
 import dev.zymion.video.browser.app.services.file.FileService;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class VideoController {
                 .body(subtitles);
     }
 
+    @SkipLogging
     @GetMapping("/image")
     public ResponseEntity<Resource> getImageResource(@RequestParam("path") String relativePath) {
         try {

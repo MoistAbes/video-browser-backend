@@ -345,4 +345,8 @@ public class ShowService {
                 .orElseThrow(() -> new ShowNotFoundException("Show not found with id: " + showId));
         return showMapper.mapToDto(show);
     }
+
+    public void deleteAllShows() {
+        showRepository.deleteAll();
+    }
 }

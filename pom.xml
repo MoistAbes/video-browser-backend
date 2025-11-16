@@ -9,8 +9,8 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>dev.zymion</groupId>
-	<artifactId>video-browser-app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+    <artifactId>zymflix-backend</artifactId>
+    <version>1.0.0</version>
 	<name>video-browser-app</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -108,7 +108,8 @@
     </dependencies>
 
 	<build>
-		<plugins>
+        <finalName>zymflix-backend</finalName>
+        <plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>

@@ -96,5 +96,16 @@ public class ShowController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/deleteAll")
+    public ResponseEntity<Void> deleteAllShows() {
+
+        showService.deleteAllShows();
+
+        return ResponseEntity.ok().build();
+    }
+
+
+
+
 
 }

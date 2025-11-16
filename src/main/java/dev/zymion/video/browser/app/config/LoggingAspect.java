@@ -1,14 +1,18 @@
 package dev.zymion.video.browser.app.config;
 
+import dev.zymion.video.browser.app.config.adnotations.SkipLogging;
 import dev.zymion.video.browser.app.services.security.CustomUserDetails;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import java.lang.reflect.Method;
 
 /**
  * Aspect odpowiedzialny za logowanie wywołań metod w kontrolerach.
@@ -32,12 +36,16 @@ public class LoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    /*
-     Dodatkowo mierzy czas wykonania metody (response time),
-     co pozwala na analizę wydajności poszczególnych endpointów.
-     */
     @Around("execution(* dev.zymion.video.browser.app.controllers..*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+
+        // jeśli metoda ma adnotację @SkipLogging, wykonaj ją bez logowania
+        if (method.isAnnotationPresent(SkipLogging.class)) {
+            return joinPoint.proceed();
+        }
+
         long start = System.currentTimeMillis();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -53,5 +61,5 @@ public class LoggingAspect {
 
         return result;
     }
-
 }
+
