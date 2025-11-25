@@ -29,11 +29,13 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
     private final StreamAuthFilter streamAuthFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService, StreamAuthFilter streamAuthFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService, StreamAuthFilter streamAuthFilter, RateLimitingFilter rateLimitingFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
         this.streamAuthFilter = streamAuthFilter;
+        this.rateLimitingFilter = rateLimitingFilter;
     }
 
     @Bean
@@ -51,7 +53,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
+                // Dodanie rate limiting filter jako pierwszy
                 .addFilterBefore(new CorsFilter(corsConfigurationSource), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 // Nasz StreamAuthFilter
                 .addFilterBefore(streamAuthFilter, UsernamePasswordAuthenticationFilter.class)

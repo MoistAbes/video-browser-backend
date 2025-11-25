@@ -36,7 +36,7 @@ public class LoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    @Around("execution(* dev.zymion.video.browser.app.controllers..*(..))")
+    @Around("execution(public * dev.zymion.video.browser.app.controllers..*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

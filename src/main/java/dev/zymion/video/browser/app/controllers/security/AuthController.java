@@ -1,6 +1,7 @@
 package dev.zymion.video.browser.app.controllers.security;
 
 import dev.zymion.video.browser.app.exceptions.UserDisabledException;
+import dev.zymion.video.browser.app.exceptions.WrongUsernameOrPasswordException;
 import dev.zymion.video.browser.app.models.dto.AuthRequestDto;
 import dev.zymion.video.browser.app.models.dto.JwtTokenDto;
 import dev.zymion.video.browser.app.models.entities.user.UserInfoEntity;
@@ -46,7 +47,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<JwtTokenDto> login(@Valid @RequestBody AuthRequestDto request) {
+    public ResponseEntity<JwtTokenDto> login(@Valid @RequestBody AuthRequestDto request) throws WrongUsernameOrPasswordException {
 
         if (loginAttemptService.isBlocked(request.username())) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -72,27 +73,10 @@ public class AuthController {
 
         } catch (AuthenticationException e) {
             loginAttemptService.loginFailed(request.username()); // zwiększamy licznik przy błędzie
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            throw new WrongUsernameOrPasswordException();
         }
     }
-
-//    @PostMapping("/login")
-//    public ResponseEntity<JwtTokenDto> login(@Valid @RequestBody AuthRequestDto request) {
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-//        );
-//        log.info("is authenticated");
-//
-//        UserInfoEntity user = userInfoRepository.findByUsername(request.username())
-//                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-//
-//        if (!user.isActive()) {
-//            throw new UserDisabledException("This account is disabled");
-//        }
-//
-//        String jwtToken = jwtService.generateToken(user);
-//        return ResponseEntity.ok(new JwtTokenDto(jwtToken));
-//    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register")

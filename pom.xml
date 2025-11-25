@@ -108,11 +108,6 @@
             <artifactId>camunda-bpm-spring-boot-starter</artifactId>
             <version>7.24.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
-            <artifactId>bucket4j-spring-boot-starter</artifactId>
-            <version>0.13.0</version>
-        </dependency>
 
 
     </dependencies>

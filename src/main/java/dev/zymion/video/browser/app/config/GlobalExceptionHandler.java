@@ -54,6 +54,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
+    @ExceptionHandler(WrongUsernameOrPasswordException.class)
+    public ResponseEntity<ErrorResponseDto> handleWrongUsernameOrPasswordException(WrongUsernameOrPasswordException ex) {
+        ErrorResponseDto error = new ErrorResponseDto(
+                "Niepoprawna nazwa użytkownika lub hasło",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
 
 }
 
