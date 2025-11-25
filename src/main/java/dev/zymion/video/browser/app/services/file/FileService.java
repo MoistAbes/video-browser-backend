@@ -3,6 +3,7 @@ package dev.zymion.video.browser.app.services.file;
 import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.models.entities.show.MediaItemEntity;
 import dev.zymion.video.browser.app.repositories.show.MediaItemRepository;
+import dev.zymion.video.browser.app.services.util.VideoFileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -28,13 +29,14 @@ public class FileService {
     private final AppPathProperties appPathProperties;
     private final Path videoFolder;
     private final MediaItemRepository mediaItemRepository;
+    private final VideoFileUtils videoFileUtils;
 
 
-    public FileService(AppPathProperties appPathProperties, MediaItemRepository mediaItemRepository) {
+    public FileService(AppPathProperties appPathProperties, MediaItemRepository mediaItemRepository, VideoFileUtils videoFileUtils) {
         this.appPathProperties = appPathProperties;
         this.videoFolder = appPathProperties.getVideoFolder();
-
         this.mediaItemRepository = mediaItemRepository;
+        this.videoFileUtils = videoFileUtils;
     }
 
 
@@ -97,17 +99,12 @@ public class FileService {
         try (Stream<Path> paths = Files.walk(root)) {
             return paths
                     .filter(Files::isRegularFile)
-                    .filter(this::isVideoFile)
+                    .filter(videoFileUtils::isVideoFile)  // <-- używamy nowego utility
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException("Błąd podczas skanowania plików wideo w folderze: " + root, e);
         }
-    }
 
-
-    private boolean isVideoFile(Path path) {
-        String name = path.getFileName().toString().toLowerCase();
-        return name.endsWith(".mp4") || name.endsWith(".mkv") || name.endsWith(".avi");
     }
 
 

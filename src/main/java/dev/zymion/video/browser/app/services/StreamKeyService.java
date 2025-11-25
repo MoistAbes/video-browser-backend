@@ -21,7 +21,7 @@ public class StreamKeyService {
     private final StringRedisTemplate redisTemplate;
 
     // Czas życia klucza – można potem przenieść do application.yml
-    private static final Duration KEY_TTL = Duration.ofHours(1);
+    private static final Duration KEY_TTL = Duration.ofHours(24);
 
     public StreamKeyService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;

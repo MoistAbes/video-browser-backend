@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -22,6 +23,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -40,23 +42,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/index.html",
-                                "/favicon.ico",
-                                "/assets/**",        // Angular assets
-                                "/media/**",         // fonty, ikony
-                                "/static/**",        // standardowa ścieżka dla static w Spring Boot
-                                "/*.js", "/*.css"   // bundlowane pliki Angulara
-                        ).permitAll()
-                        .requestMatchers("/login").permitAll() // ścieżki routingu SPA
-                        .requestMatchers("/home").permitAll() // ścieżki routingu SPA
-                        .requestMatchers("/auth/**").permitAll() //logowanie, rejestracja
-                        .requestMatchers("/videos/image").permitAll() //obrazki
-                        .requestMatchers("/videos/subtitles/**").permitAll() //napisy
+                        .requestMatchers("/auth/login").permitAll() //logowanie, rejestracja
+                        .requestMatchers("/videos/subtitles/**").permitAll() //napisy to jeszcze trzeba wywalic z tad!!!
                         .requestMatchers("/error").permitAll() //bledy
                         .requestMatchers("/ws/**").permitAll() // websocket
-                        .requestMatchers("/stream/**").permitAll() //weryfikujemy wlasnym filtrem
+                        .requestMatchers("/stream/normal").permitAll() //weryfikujemy wlasnym filtrem
+                        .requestMatchers("/stream/normal/preview").permitAll() //weryfikujemy wlasnym filtrem
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
@@ -75,7 +66,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12); // Ustawienie mocy
     }
 
     @Bean
@@ -97,12 +88,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-//    @Bean
-//    public WebSecurityCustomizer webSecurityCustomizer() {
-//        return (web) -> web.ignoring().requestMatchers("/stream/**");
-//    }
-
-
-
 }

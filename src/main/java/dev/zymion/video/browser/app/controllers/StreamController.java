@@ -2,7 +2,6 @@ package dev.zymion.video.browser.app.controllers;
 
 import dev.zymion.video.browser.app.services.StreamKeyService;
 import dev.zymion.video.browser.app.services.StreamService;
-import dev.zymion.video.browser.app.config.properties.AppPathProperties;
 import dev.zymion.video.browser.app.services.security.SecurityUtilService;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,8 +71,6 @@ public class StreamController {
                               @RequestParam("authKey") String authKey,
                               HttpServletRequest request,
                               HttpServletResponse response) throws IOException {
-
-        Long bytes = 150L * 1024 * 1024;
 
         streamService.getStream(relativePath, request, response, null);
     }

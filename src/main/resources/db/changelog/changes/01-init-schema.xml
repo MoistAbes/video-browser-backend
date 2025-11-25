@@ -3,10 +3,27 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd">
+
+    <changeSet id="00-create-schemas" author="system">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS main_schema;
+            CREATE SCHEMA IF NOT EXISTS camunda;
+
+            GRANT ALL ON SCHEMA main_schema TO postgres;
+            GRANT ALL ON SCHEMA camunda TO postgres;
+        </sql>
+    </changeSet>
+
+    <changeSet id="00-set-search-path-user" author="system">
+        <sql>
+            ALTER USER postgres SET search_path TO main_schema, public;
+        </sql>
+    </changeSet>
+
 
     <!-- 1️⃣ Tabela: user_icon -->
-    <changeSet id="1" author="system">
+    <changeSet id="01-user_icon" author="system">
         <createTable tableName="user_icon">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_user_icon"/>
@@ -18,7 +35,7 @@
     </changeSet>
 
     <!-- 2️⃣ Tabela: user_status -->
-    <changeSet id="2" author="system">
+    <changeSet id="02-user_status" author="system">
         <createTable tableName="user_status">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_user_status"/>
@@ -30,7 +47,7 @@
     </changeSet>
 
     <!-- 3️⃣ Tabela: roles -->
-    <changeSet id="3" author="system">
+    <changeSet id="03-roles" author="system">
         <createTable tableName="roles">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_roles"/>
@@ -42,8 +59,8 @@
     </changeSet>
 
     <!-- 4️⃣ Tabela: user_info -->
-    <changeSet id="4" author="system">
-        <createTable tableName="user_info">
+    <changeSet id="04-user_info" author="system">
+        <createTable  tableName="user_info">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_user_info"/>
             </column>
@@ -87,8 +104,8 @@
     </changeSet>
 
     <!-- 5️⃣ Tabela pośrednia: user_roles -->
-    <changeSet id="5" author="system">
-        <createTable tableName="user_roles">
+    <changeSet id="05-user_roles" author="system">
+        <createTable  tableName="user_roles">
             <column name="user_id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
@@ -118,7 +135,7 @@
     </changeSet>
 
     <!-- 1️⃣ show_structures -->
-    <changeSet id="6" author="system">
+    <changeSet id="06-show_structures" author="system">
         <createTable tableName="show_structures">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_show_structures"/>
@@ -130,7 +147,7 @@
     </changeSet>
 
     <!-- 2️⃣ genres -->
-    <changeSet id="7" author="system">
+    <changeSet id="07-genres" author="system">
         <createTable tableName="genres">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_genres"/>
@@ -148,7 +165,7 @@
     </changeSet>
 
     <!-- 3️⃣ shows -->
-    <changeSet id="8" author="system">
+    <changeSet id="08-shows" author="system">
         <createTable tableName="shows">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_shows"/>
@@ -176,7 +193,7 @@
     </changeSet>
 
     <!-- 4️⃣ seasons -->
-    <changeSet id="9" author="system">
+    <changeSet id="09-seasons" author="system">
         <createTable tableName="seasons">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_seasons"/>
@@ -194,7 +211,7 @@
     </changeSet>
 
     <!-- 5️⃣ media_item -->
-    <changeSet id="10" author="system">
+    <changeSet id="10-media_item" author="system">
         <createTable tableName="media_item">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" primaryKeyName="pk_media_item"/>
@@ -241,7 +258,7 @@
     </changeSet>
 
     <!-- 6️⃣ shows_genres (ManyToMany) -->
-    <changeSet id="11" author="system">
+    <changeSet id="11-show_genres" author="system">
         <createTable tableName="shows_genres">
             <column name="show_id" type="BIGINT">
                 <constraints nullable="false"/>
@@ -268,6 +285,5 @@
                 referencedTableName="genres"
                 referencedColumnNames="id"/>
     </changeSet>
-
 
 </databaseChangeLog>

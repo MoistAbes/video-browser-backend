@@ -8,6 +8,7 @@ import dev.zymion.video.browser.app.services.ShowService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +73,7 @@ public class ShowController {
         return showService.findAllShowsWithRootPath();
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("add/genre/{showId}/{genreId}")
     public ResponseEntity<Void> addGenre(@PathVariable Long showId, @PathVariable Long genreId) {
 
@@ -80,6 +81,7 @@ public class ShowController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/remove/genre/{showId}/{genreId}")
     public ResponseEntity<Void> removeGenre(@PathVariable Long showId, @PathVariable Long genreId) {
 
@@ -87,7 +89,7 @@ public class ShowController {
         return ResponseEntity.ok().build();
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{showId}")
     public ResponseEntity<Void> deleteShow(@PathVariable Long showId) {
 
@@ -96,6 +98,7 @@ public class ShowController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/deleteAll")
     public ResponseEntity<Void> deleteAllShows() {
 

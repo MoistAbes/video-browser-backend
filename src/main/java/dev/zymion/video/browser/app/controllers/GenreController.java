@@ -3,6 +3,7 @@ package dev.zymion.video.browser.app.controllers;
 import dev.zymion.video.browser.app.models.dto.show.GenreDto;
 import dev.zymion.video.browser.app.services.GenreService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -27,14 +28,12 @@ public class GenreController {
         return ResponseEntity.ok(genres);
     }
 
-
-
     @GetMapping("/find/all/names")
     public ResponseEntity<List<String>> findAllGenreNames() {
         return ResponseEntity.ok(genreService.findAllGenresNames());
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/update")
     public ResponseEntity<Void> updateGenres() {
 

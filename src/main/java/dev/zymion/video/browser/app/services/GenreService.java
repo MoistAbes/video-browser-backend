@@ -8,8 +8,6 @@ import dev.zymion.video.browser.app.mappers.GenreMapper;
 import dev.zymion.video.browser.app.models.dto.show.GenreDto;
 import dev.zymion.video.browser.app.models.entities.show.GenreEntity;
 import dev.zymion.video.browser.app.repositories.show.GenreRepository;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -40,8 +38,6 @@ public class GenreService {
 
 
     public void updateGenresFromTmdbApi() {
-
-//        genreRepository.deleteAll();
 
         List<TmdbGenreModel> genres = movieMetadataApiService.fetchAllGenres();
 

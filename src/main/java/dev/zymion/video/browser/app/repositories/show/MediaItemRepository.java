@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface MediaItemRepository extends JpaRepository<MediaItemEntity, Long> {
@@ -17,5 +18,8 @@ public interface MediaItemRepository extends JpaRepository<MediaItemEntity, Long
 
     @Query("SELECT m FROM MediaItemEntity m WHERE m.audio IN :unsupported")
     List<MediaItemEntity> findAllWithUnsupportedAudioCodecs(@Param("unsupported") List<String> unsupported);
+
+    @Query("SELECT m FROM MediaItemEntity m WHERE CONCAT(m.rootPath, '/', m.fileName) NOT IN :currentPaths")
+    List<MediaItemEntity> findNotExisting(@Param("currentPaths") Set<String> currentPaths);
 
 }

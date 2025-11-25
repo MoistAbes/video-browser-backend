@@ -18,13 +18,13 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
 
     List<ShowRootPathProjection> findAllBy();
 
-    @Query(value = "SELECT * FROM shows ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
+    @Query(value = "SELECT * FROM main_schema.shows ORDER BY RANDOM() LIMIT :limit", nativeQuery = true)
     List<ShowEntity> findRandomShows(@Param("limit") int limit);
 
     @Query(value = """
     SELECT s.* 
-    FROM shows s
-    JOIN show_structures ss ON s.show_structure_id = ss.id
+    FROM main_schema.shows s
+    JOIN main_schema.show_structures ss ON s.show_structure_id = ss.id
     WHERE ss.name = :structureType
     ORDER BY RANDOM()
     LIMIT :limit
@@ -36,8 +36,8 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
 
     @Query(value = """
     SELECT s.* 
-    FROM shows s
-    JOIN shows_genres sg ON s.id = sg.show_id
+    FROM main_schema.shows s
+    JOIN main_schema.shows_genres sg ON s.id = sg.show_id
     WHERE sg.genre_id = :genreId
     ORDER BY RANDOM()
     LIMIT :limit
@@ -48,11 +48,11 @@ public interface ShowRepository extends JpaRepository<ShowEntity, Long> {
 
     @Query(value = """
     SELECT s.*
-    FROM shows s
+    FROM main_schema.shows s
     WHERE s.show_structure_id = :structureTypeId
       AND s.id IN (
           SELECT sg.show_id
-          FROM shows_genres sg
+          FROM main_schema.shows_genres sg
           WHERE sg.genre_id = :genreId
       )
     ORDER BY RANDOM()

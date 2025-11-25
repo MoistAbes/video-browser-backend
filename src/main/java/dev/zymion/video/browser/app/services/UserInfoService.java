@@ -18,7 +18,6 @@ import dev.zymion.video.browser.app.repositories.user.UserInfoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;

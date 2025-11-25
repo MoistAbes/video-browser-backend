@@ -8,7 +8,6 @@ import dev.zymion.video.browser.app.exceptions.GenreNotFoundException;
 import dev.zymion.video.browser.app.exceptions.ShowNotFoundException;
 import dev.zymion.video.browser.app.models.dto.show.ShowDto;
 import dev.zymion.video.browser.app.enums.MediaTypeEnum;
-import dev.zymion.video.browser.app.exceptions.ShowMappingException;
 import dev.zymion.video.browser.app.mappers.ShowMapper;
 import dev.zymion.video.browser.app.models.entities.show.*;
 import dev.zymion.video.browser.app.models.projections.ShowRootPathProjection;
@@ -16,14 +15,16 @@ import dev.zymion.video.browser.app.repositories.show.GenreRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowRepository;
 import dev.zymion.video.browser.app.repositories.show.ShowStructureRepository;
 import dev.zymion.video.browser.app.services.util.StringUtilService;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ShowService {
 
     private final ShowRepository showRepository;
@@ -33,10 +34,9 @@ public class ShowService {
     private final StringUtilService stringUtilService;
     private final MovieMetadataApiService movieMetadataApiService;
     private final ShowStructureService showStructureService;
-    private final EntityManager entityManager;
 
     @Autowired
-    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService, ShowStructureService showStructureService, EntityManager entityManager) {
+    public ShowService(ShowRepository showRepository, ShowMapper showMapper, GenreRepository genreRepository, ShowStructureRepository showStructureRepository, StringUtilService stringUtilService, MovieMetadataApiService movieMetadataApiService, ShowStructureService showStructureService) {
         this.showRepository = showRepository;
         this.showMapper = showMapper;
         this.genreRepository = genreRepository;
@@ -44,125 +44,115 @@ public class ShowService {
         this.stringUtilService = stringUtilService;
         this.movieMetadataApiService = movieMetadataApiService;
         this.showStructureService = showStructureService;
-        this.entityManager = entityManager;
     }
 
     public List<ShowRootPathProjection> findAllShowsWithRootPath() {
         return showRepository.findAllBy();
     }
 
-
+    /**
+     * Tworzy lub aktualizuje wszystkie show na podstawie listy MediaItemEntity
+     *
+     * @param mediaItemEntities lista filmów/odcinków
+     * @return zapisane encje ShowEntity
+     */
     public List<ShowEntity> setUpShows(List<MediaItemEntity> mediaItemEntities) {
-
-        //znajdujemy wszystkie show
         List<ShowEntity> shows = showRepository.findAll();
+        List<String> showNames = shows.stream().map(ShowEntity::getName).toList();
 
-        //zdobywamy liste nazw (będą unikalne)
-        List<String> showNames = shows.stream()
-                .map(ShowEntity::getName)
-                .toList();
+        Map<String, List<MediaItemEntity>> mediaByShow = groupMediaByParentTitle(mediaItemEntities);
 
-
-        //tworzymy mape key = showname, value lista media items tego show
-        Map<String, List<MediaItemEntity>> mediaItemEntityMap = new HashMap<>();
-        for (MediaItemEntity mediaItemEntity : mediaItemEntities) {
-            String parentTitle = mediaItemEntity.getParentTitle();
-            mediaItemEntityMap
-                    .computeIfAbsent(parentTitle, k -> new ArrayList<>())
-                    .add(mediaItemEntity);
-        }
-
-        //Tutaj bedziemy dodawac encje do zapisu/edycji
         List<ShowEntity> showEntityList = new ArrayList<>();
-
-        //przechodzimy po mapie
-        for (Map.Entry<String, List<MediaItemEntity>> entry : mediaItemEntityMap.entrySet()) {
+        for (Map.Entry<String, List<MediaItemEntity>> entry : mediaByShow.entrySet()) {
             String showName = entry.getKey();
 
-            //jesli mapa zawiera nazwe ktora wczesniej pobralismy z bazy to znaczy ze show juz istnieje i trzeba je aktualizowac
             if (showNames.contains(showName)) {
                 showEntityList.add(handleShowUpdate(shows, showNames, showName, entry));
-                continue;
+            } else {
+                showEntityList.add(createNewShow(showName, entry.getValue()));
             }
-
-
-            List<MediaItemEntity> videos = entry.getValue();
-
-//            System.out.printf("%s: %s\n", showName, videos.size());
-
-            ShowEntity showEntity = ShowEntity.builder()
-                    .movies(new ArrayList<>())
-                    .name(showName)
-                    .build();
-
-            Map<Integer, SeasonEntity> seasonsEntityMap = new HashMap<>();
-
-            for (MediaItemEntity mediaItemEntity : videos) {
-
-                String fullPath = mediaItemEntity.getRootPath();
-                int secondSlash = fullPath.indexOf("/", fullPath.indexOf("/") + 1);
-
-                if (secondSlash != -1) {
-                    showEntity.setRootPath(fullPath.substring(0, secondSlash));
-                } else {
-                    showEntity.setRootPath(fullPath);
-                }
-
-                if (mediaItemEntity.getType() == MediaTypeEnum.TV) {
-                    try {
-
-                        int seasonNumber = mediaItemEntity.getSeasonNumber().get();
-
-                        // Pobierz sezon lub stwórz nowy
-                        SeasonEntity seasonEntity = seasonsEntityMap.computeIfAbsent(seasonNumber, s -> SeasonEntity.builder()
-                                .number(seasonNumber)
-                                .episodes(new ArrayList<>())
-                                .build());
-
-
-                        // Utwórz odcinek i przypisz do sezonu
-                        seasonEntity.getEpisodes().add(mediaItemEntity);
-
-                    }catch (Exception e){
-                        throw new ShowMappingException(
-                                "Error while mapping video: " + mediaItemEntity.getTitle(), e
-                        );
-                    }
-
-                }else {
-                    showEntity.getMovies().add(mediaItemEntity);
-                }
-            }
-
-            // Dodaj sezony do show
-            showEntity.setSeasons(new ArrayList<>(seasonsEntityMap.values()));
-
-            showEntityList.add(showEntity);
-
         }
 
-        // Tutaj możesz zapisać wszystkie show do bazy
-       return showRepository.saveAll(showEntityList);
+        return showRepository.saveAll(showEntityList);
     }
 
-    private ShowEntity handleShowUpdate(List<ShowEntity> shows, List<String> showNames, String showName, Map.Entry<String, List<MediaItemEntity>> entry) {
+
+    /**
+     * Grupuje MediaItemEntity według parentTitle
+     */
+    private Map<String, List<MediaItemEntity>> groupMediaByParentTitle(List<MediaItemEntity> mediaItems) {
+        return mediaItems.stream()
+                .collect(Collectors.groupingBy(MediaItemEntity::getParentTitle));
+    }
+
+    /**
+     * Tworzy nowe ShowEntity z listą MediaItemEntity
+     */
+    private ShowEntity createNewShow(String showName, List<MediaItemEntity> videos) {
+        ShowEntity showEntity = ShowEntity.builder()
+                .name(showName)
+                .movies(new ArrayList<>())
+                .build();
+
+        Map<Integer, SeasonEntity> seasonsEntityMap = new HashMap<>();
+
+        for (MediaItemEntity mediaItem : videos) {
+            assignRootPath(showEntity, mediaItem);
+
+            if (mediaItem.getType() == MediaTypeEnum.TV) {
+                int seasonNumber = mediaItem.getSeasonNumber().orElse(0);
+
+                SeasonEntity season = seasonsEntityMap.computeIfAbsent(seasonNumber, s -> SeasonEntity.builder()
+                        .number(seasonNumber)
+                        .episodes(new ArrayList<>())
+                        .build());
+
+                season.getEpisodes().add(mediaItem);
+            } else {
+                showEntity.getMovies().add(mediaItem);
+            }
+        }
+
+        showEntity.setSeasons(new ArrayList<>(seasonsEntityMap.values()));
+        return showEntity;
+    }
+
+    /**
+     * Ustawia rootPath dla ShowEntity na podstawie ścieżki MediaItemEntity
+     */
+    private void assignRootPath(ShowEntity showEntity, MediaItemEntity mediaItem) {
+        String fullPath = mediaItem.getRootPath();
+
+        int firstSlash = fullPath.indexOf("/");
+        String rootPath = firstSlash != -1
+                ? fullPath.substring(0, firstSlash)
+                : fullPath;
+
+        showEntity.setRootPath(rootPath);
+    }
+
+
+
+    /**
+     * Aktualizuje istniejące ShowEntity, dodając nowe filmy lub odcinki do odpowiednich sezonów
+     */
+    private ShowEntity handleShowUpdate(List<ShowEntity> shows,
+                                        List<String> showNames,
+                                        String showName,
+                                        Map.Entry<String, List<MediaItemEntity>> entry) {
 
         ShowEntity showToEdit = shows.get(showNames.indexOf(showName));
 
         for (MediaItemEntity mediaItemEntity : entry.getValue()) {
             if (mediaItemEntity.getType() == MediaTypeEnum.MOVIE) {
                 showToEdit.getMovies().add(mediaItemEntity);
-            }else if (mediaItemEntity.getType() == MediaTypeEnum.TV) {
-
-
+            } else if (mediaItemEntity.getType() == MediaTypeEnum.TV) {
                 mediaItemEntity.getSeasonNumber().ifPresent(seasonNumber -> {
-                    // szukamy istniejącego sezonu
                     Optional<SeasonEntity> existingSeasonOpt = showToEdit.getSeasons().stream()
                             .filter(seasonEntity -> seasonEntity.getNumber() == seasonNumber)
                             .findFirst();
 
                     SeasonEntity seasonEntity = existingSeasonOpt.orElseGet(() -> {
-                        // jeśli nie ma -> tworzymy nowy sezon
                         SeasonEntity newSeason = SeasonEntity.builder()
                                 .number(seasonNumber)
                                 .episodes(new ArrayList<>())
@@ -171,15 +161,12 @@ public class ShowService {
                         return newSeason;
                     });
 
-                    // dodajemy odcinek do istniejącego lub nowo utworzonego sezonu
                     seasonEntity.getEpisodes().add(mediaItemEntity);
                 });
-
             }
         }
 
         return showToEdit;
-
     }
 
     public List<ShowDto> findAll() {
@@ -201,7 +188,6 @@ public class ShowService {
 
         return showMapper.mapToDto(showEntity);
     }
-
 
     public List<ShowDto> findRandom() {
 
@@ -247,54 +233,59 @@ public class ShowService {
         showRepository.save(show);
     }
 
-    public void setUpShowsStructureType() {
-        List<ShowEntity> allShows = showRepository.findAll();
+    public void setUpShowsStructureType(List<Long> savedShowIds) {
+        List<ShowEntity> savedShows = showRepository.findAllById(savedShowIds);
+        List<ShowStructureEntity> allStructures = showStructureRepository.findAll();
 
-        for (ShowEntity show : allShows) {
+        // mapa StructureTypeEnum -> ShowStructureEntity
+        Map<StructureTypeEnum, ShowStructureEntity> structureMap = allStructures.stream()
+                .collect(Collectors.toMap(ShowStructureEntity::getName, Function.identity()));
+
+        for (ShowEntity show : savedShows) {
             StructureTypeEnum type = StructureTypeEnum.fromShow(show);
 
-            ShowStructureEntity structure = showStructureRepository.findByName(type)
-                    .orElseThrow(() -> new IllegalStateException("Brak zdefiniowanej struktury: " + type));
+            ShowStructureEntity structure = structureMap.get(type);
+            if (structure == null) {
+                throw new IllegalStateException("Brak zdefiniowanej struktury: " + type);
+            }
 
             show.setStructure(structure);
         }
 
-        showRepository.saveAll(allShows);
+        showRepository.saveAll(savedShows);
     }
+
 
     public void syncShowMetadataWithTmdb(List<ShowEntity> shows) {
-
         List<GenreEntity> genres = genreRepository.findAll();
 
-
         for (ShowEntity show : shows) {
+            try {
+                String rawTitle = show.getName();
+                String cleanTitle = stringUtilService.extractCleanTitle(rawTitle);
+                Optional<Integer> yearOpt = stringUtilService.extractYearFromTitle(rawTitle);
 
-            //wyciagamy czysty tytuł
-            String rawTitle = show.getName();
-            String cleanTitle = stringUtilService.extractCleanTitle(rawTitle);
-            //wyciagamy potencjalny rok produkcji
-            Optional<Integer> yearOpt = stringUtilService.extractYearFromTitle(rawTitle);
+                StructureTypeEnum structure = show.getStructure().getName();
+                boolean isMovie = structure == StructureTypeEnum.SINGLE_MOVIE
+                        || structure == StructureTypeEnum.MOVIE_COLLECTION;
 
-            boolean isMovie = false;
+                Optional<TmdbMovieMetadata> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
 
-            //decydujemy czy jest to film czy nie (potrzebne do fetch api tmdb inne endpointy)
-            StructureTypeEnum structure = show.getStructure().getName();
-            if (structure == StructureTypeEnum.SINGLE_MOVIE || structure == StructureTypeEnum.MOVIE_COLLECTION) {
-                isMovie = true;
+                showMetadata.ifPresent(tmdbMovieMetadata -> {
+                    show.setGenres(tmdbMovieMetadata.getGenres());
+                    show.setDescription(tmdbMovieMetadata.getOverview());
+                });
+
+                // zapis pojedynczego show po pobraniu danych – bezpieczniejsze
+                showRepository.save(show);
+
+            } catch (Exception e) {
+                log.error("Błąd przy synchronizacji show: " + show.getName(), e);
+                // możesz zdecydować czy rzucić wyjątek czy kontynuować
             }
-
-
-            Optional<TmdbMovieMetadata> showMetadata = movieMetadataApiService.fetchMetadata(cleanTitle, yearOpt, isMovie, genres);
-
-            //jesli znajdzie dane
-            showMetadata.ifPresent(tmdbMovieMetadata -> {
-                show.setGenres(tmdbMovieMetadata.getGenres());
-                show.setDescription(tmdbMovieMetadata.getOverview());
-            });
         }
-        showRepository.saveAll(shows);
-
     }
+
 
     public Map<GenreEnum, List<ShowRootPathProjection>> findRandomByStructureAndGroupedByGenre(StructureTypeEnum structureType) {
 

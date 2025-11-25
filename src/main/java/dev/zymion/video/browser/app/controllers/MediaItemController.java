@@ -2,6 +2,7 @@ package dev.zymion.video.browser.app.controllers;
 
 import dev.zymion.video.browser.app.services.MediaItemService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +29,7 @@ public class MediaItemController {
      * Zwraca HTTP 202 Accepted, ponieważ proces trwa asynchronicznie i nie kończy się w czasie
      * wywołania endpointa.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/convert/audio")
     public ResponseEntity<Void> convertShowsAudioCodec() throws InterruptedException {
         mediaItemService.convertMediaItemsAudioCodec();

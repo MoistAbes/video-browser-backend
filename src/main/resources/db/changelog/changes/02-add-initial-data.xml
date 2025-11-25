@@ -6,39 +6,96 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
     <!-- Dodanie bazowych ról -->
-    <changeSet id="1" author="system">
-        <insert tableName="roles">
+    <changeSet id="01-insert-roles" author="system">
+        <insert schemaName="main_schema" tableName="roles">
             <column name="name" value="USER"/>
         </insert>
-        <insert tableName="roles">
+        <insert schemaName="main_schema" tableName="roles">
             <column name="name" value="ADMIN"/>
         </insert>
     </changeSet>
 
     <!-- 2️⃣ Wstawienie domyślnej ikony -->
-    <changeSet id="2" author="system">
-        <insert tableName="user_icon">
+    <changeSet id="02-insert-user-icons" author="system">
+        <insert schemaName="main_schema" tableName="user_icon">
             <column name="name" value="fa-solid fa-face-smile"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-angry"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-dizzy"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-flushed"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-frown"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-frown-open"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-grimace"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-meh"/>
+        </insert>
+        <insert schemaName="main_schema" tableName="user_icon">
+            <column name="name" value="fa-solid fa-face-rolling-eyes"/>
         </insert>
     </changeSet>
 
     <!-- 2️⃣ initial data for show_structures -->
-    <changeSet id="3" author="system" context="init-data">
-        <insert tableName="show_structures">
+    <changeSet id="03-insert-show_structures" author="system" context="init-data">
+        <insert schemaName="main_schema" tableName="show_structures">
             <column name="name" value="SINGLE_MOVIE"/>
         </insert>
-        <insert tableName="show_structures">
+        <insert schemaName="main_schema" tableName="show_structures">
             <column name="name" value="MOVIE_COLLECTION"/>
         </insert>
-        <insert tableName="show_structures">
+        <insert schemaName="main_schema" tableName="show_structures">
             <column name="name" value="SEASONAL_SERIES"/>
         </insert>
-        <insert tableName="show_structures">
+        <insert schemaName="main_schema" tableName="show_structures">
             <column name="name" value="HYBRID"/>
         </insert>
-        <insert tableName="show_structures">
+        <insert schemaName="main_schema" tableName="show_structures">
             <column name="name" value="UNKNOWN"/>
         </insert>
+    </changeSet>
+
+
+
+    <changeSet id="04-insert-user-admin" author="system" context="init-data">
+        <insert schemaName="main_schema" tableName="user_status">
+            <column name="is_online" value="true"/>
+            <column name="is_watching" value="false"/>
+        </insert>
+
+        <insert schemaName="main_schema" tableName="user_info">
+            <column name="username" value="admin"/>
+            <column name="password" value="$2a$12$Q9P0LGVft6b.vQPUFFuRfOOebNYj08mSLxaWl1mR7WX/BXEQNjZs."/>
+            <column name="icon_color" value="#f1c27d" />
+            <column name="icon_id" value="1" />
+            <column name="status_id" value="1" />
+            <column name="active" value="true" />
+            <column name="registration_date" value="01-01-2025" />
+        </insert>
+
+        <insert schemaName="main_schema" tableName="user_roles">
+            <column name="user_id" value="1"/>
+            <column name="role_id" value="1"/>
+        </insert>
+
+        <insert schemaName="main_schema" tableName="user_roles">
+            <column name="user_id" value="1"/>
+            <column name="role_id" value="2"/>
+        </insert>
+
+
+
+
     </changeSet>
 
 </databaseChangeLog>
