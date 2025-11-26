@@ -5,6 +5,7 @@ import dev.zymion.video.browser.app.models.dto.user.UserInfoWithStatusDto;
 import dev.zymion.video.browser.app.services.UserInfoService;
 import dev.zymion.video.browser.app.services.security.SecurityUtilService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 

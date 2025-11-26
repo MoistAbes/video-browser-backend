@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.security.Principal;
+
 @Component
 @Log4j2
 public class WebSocketEventListener {
@@ -24,10 +26,15 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleConnect(SessionConnectEvent event) {
-        // oznacz użytkownika jako online
-        Long userId = securityUtilService.getCurrentUserId();
-        log.info("user id: {} Connected to websocket: {} | " ,userId ,event);
-        userInfoService.updateUserOnlineStatus(userId, true);
+        Principal principal = event.getUser(); // <-- tu jest użytkownik
+
+        if (principal instanceof UsernamePasswordAuthenticationToken auth) {
+            CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
+            Long userId = user.getId();
+
+            log.info("user id: {} Connected to websocket: {}", userId, event);
+            userInfoService.updateUserOnlineStatus(userId, true);
+        }
     }
 
     @EventListener

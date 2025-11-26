@@ -2,6 +2,7 @@ package dev.zymion.video.browser.app.config.security;
 
 import dev.zymion.video.browser.app.services.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -19,12 +20,12 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     // Dobrze jest mieć logger do śledzenia prób połączeń
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthConfig.class);
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
@@ -47,14 +48,12 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
                                         new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
                                 accessor.setUser(authentication);
-                                // Ustawienie SecurityContextHolder jest opcjonalne, ale nieszkodliwe
-                                // SecurityContextHolder.getContext().setAuthentication(authentication);
-                                logger.info("User '{}' connected to WebSocket", username);
+                                log.info("User '{}' connected to WebSocket", username);
                                 return message;
                             }
                         } catch (Exception e) {
                             // Logujemy błąd walidacji, ale nie rzucamy dalej, aby uniknąć stack trace w logach
-                            logger.warn("WebSocket connection failed due to invalid token: {}", e.getMessage());
+                            log.warn("WebSocket connection failed due to invalid token: {}", e.getMessage());
                         }
                     }
                     

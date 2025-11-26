@@ -14,6 +14,7 @@ public class SecurityUtilService {
      */
     public Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(STR."AUTHENTICATION: \{authentication}");
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
             return ((CustomUserDetails) authentication.getPrincipal()).getId();
         }
