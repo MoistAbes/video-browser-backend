@@ -30,6 +30,7 @@ public class UserInfoController {
     }
 
     @GetMapping("/")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserInfoDto>> findAllUsers() {
         List<UserInfoDto> mappedUsers = userInfoService.findAllUsers();
 
