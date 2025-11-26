@@ -54,14 +54,27 @@ public class VideoController {
         return ResponseEntity.ok("Process started");
     }
 
-    @GetMapping("/subtitles/{subtitleTitle}")
-    public ResponseEntity<Resource> getSubtitle(@RequestParam("path") String relativePath, @PathVariable("subtitleTitle") String subtitleTitle) throws IOException {
+    @GetMapping("/subtitles")
+    public ResponseEntity<Resource> getSubtitle(
+            @RequestParam("path") String relativePath,
+            @RequestParam("subtitle") String subtitleTitle) throws IOException {
+
         Resource subtitles = fileService.getSubtitles(relativePath, subtitleTitle);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("text/vtt"))
                 .body(subtitles);
     }
+
+
+//    @GetMapping("/subtitles/{subtitleTitle}")
+//    public ResponseEntity<Resource> getSubtitle(@RequestParam("path") String relativePath, @PathVariable("subtitleTitle") String subtitleTitle) throws IOException {
+//        Resource subtitles = fileService.getSubtitles(relativePath, subtitleTitle);
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType("text/vtt"))
+//                .body(subtitles);
+//    }
 
     @SkipLogging
     @GetMapping("/image")

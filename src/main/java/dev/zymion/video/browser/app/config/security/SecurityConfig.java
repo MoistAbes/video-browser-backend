@@ -45,7 +45,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login").permitAll() //logowanie, rejestracja
-                        .requestMatchers("/videos/subtitles/**").permitAll() //napisy to jeszcze trzeba wywalic z tad!!!
                         .requestMatchers("/error").permitAll() //bledy
                         .requestMatchers("/ws/**").permitAll() // websocket
                         .requestMatchers("/stream/normal").permitAll() //weryfikujemy wlasnym filtrem

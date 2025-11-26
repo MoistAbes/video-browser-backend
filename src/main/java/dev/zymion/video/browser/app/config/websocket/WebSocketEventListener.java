@@ -39,16 +39,20 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleDisconnect(SessionDisconnectEvent event) {
-        var simpUser = event.getUser(); // 👈 tu jest Principal
-        if (simpUser instanceof UsernamePasswordAuthenticationToken) {
-            Long userId = ((CustomUserDetails)((UsernamePasswordAuthenticationToken) simpUser).getPrincipal()).getId();
+        Principal user = event.getUser();
+
+        if (user instanceof UsernamePasswordAuthenticationToken auth) {
+            CustomUserDetails details = (CustomUserDetails) auth.getPrincipal();
+            Long userId = details.getId();
+
             log.info("user id: {} Disconnected from websocket: {}", userId, event);
             userInfoService.updateUserOnlineStatus(userId, false);
-
-        } else {
+        }
+        else {
             log.info("Unknown or unauthenticated user disconnected: {}", event);
         }
     }
+
 
 }
 
