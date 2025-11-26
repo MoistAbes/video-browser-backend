@@ -23,6 +23,8 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    // Dobrze jest mieć logger do śledzenia prób połączeń
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthConfig.class);
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
@@ -33,31 +35,46 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
                         MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String token = null;
-                    List<String> auth = accessor.getNativeHeader("Authorization");
-                    if (auth != null && !auth.isEmpty()) {
-                        String header = auth.getFirst();
-                        if (header.startsWith("Bearer ")) {
-                            token = header.substring(7);
+                    String token = extractToken(accessor);
+
+                    if (token != null) {
+                        try {
+                            String username = jwtService.extractUsername(token);
+                            if (username != null && jwtService.isTokenValid(token, username)) {
+                                UserDetails user = userDetailsService.loadUserByUsername(username);
+
+                                UsernamePasswordAuthenticationToken authentication =
+                                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+                                accessor.setUser(authentication);
+                                // Ustawienie SecurityContextHolder jest opcjonalne, ale nieszkodliwe
+                                // SecurityContextHolder.getContext().setAuthentication(authentication);
+                                logger.info("User '{}' connected to WebSocket", username);
+                                return message;
+                            }
+                        } catch (Exception e) {
+                            // Logujemy błąd walidacji, ale nie rzucamy dalej, aby uniknąć stack trace w logach
+                            logger.warn("WebSocket connection failed due to invalid token: {}", e.getMessage());
                         }
                     }
-                    String username = jwtService.extractUsername(token);
-
-                    if (token != null && jwtService.isTokenValid(token, username)) {
-                        UserDetails user = userDetailsService.loadUserByUsername(username);
-
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-
-                        accessor.setUser(authentication);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    } else {
-                        throw new IllegalArgumentException("Invalid or missing JWT token in STOMP CONNECT");
-                    }
+                    
+                    // Jeśli doszliśmy tutaj, token był nieprawidłowy lub go nie było.
+                    // Rzucenie wyjątku jest jednym ze sposobów przerwania połączenia.
+                    throw new IllegalArgumentException("Authentication failed. Invalid or missing JWT token.");
                 }
                 return message;
+            }
+            
+            private String extractToken(StompHeaderAccessor accessor) {
+                List<String> authHeaders = accessor.getNativeHeader("Authorization");
+                if (authHeaders != null && !authHeaders.isEmpty()) {
+                    String authHeader = authHeaders.getFirst();
+                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        return authHeader.substring(7);
+                    }
+                }
+                return null;
             }
         });
     }
 }
-
